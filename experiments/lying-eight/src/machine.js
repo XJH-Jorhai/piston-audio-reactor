@@ -1,7 +1,7 @@
 /** Rigidly rotated original machines, repeated along the head-to-foot axis. */
-export const COUNT=8,MIN_COUNT=4,MAX_COUNT=32,PITCH=3.5;
+export const COUNT=8,MIN_COUNT=4,MAX_COUNT=64,PITCH=3.5;
 export function validateCount(count){
-  if(!Number.isInteger(count)||count<MIN_COUNT||count>MAX_COUNT)throw new RangeError('Channel count must be an integer from 4 to 32.');
+  if(!Number.isInteger(count)||count<MIN_COUNT||count>MAX_COUNT)throw new RangeError('Channel count must be an integer from 4 to 64.');
   return count;
 }
 export const arrayCenter=count=>[.5,.5,((validateCount(count)-1)*PITCH-3)/2];

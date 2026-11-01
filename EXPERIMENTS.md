@@ -12,9 +12,9 @@
 | 路线 | 分支 | 独立工作目录 | 预览 |
 | --- | --- | --- | --- |
 | 透视长廊 | experiment/perspective-corridor | ../piston-audio-reactor-corridor | https://xjh-jorhai.github.io/piston-audio-reactor/experiments/perspective-corridor/ |
-| 横卧阵列（4–32 路） | experiment/lying-eight | ../piston-audio-reactor-lying-eight | https://xjh-jorhai.github.io/piston-audio-reactor/experiments/lying-eight/ |
+| 横卧阵列（4–64 路） | experiment/lying-eight | ../piston-audio-reactor-lying-eight | https://xjh-jorhai.github.io/piston-audio-reactor/experiments/lying-eight/ |
 
-横卧路线基于 v0.2.0-corridor.1，默认侧俯视，可切换正俯视（从长边正面斜向看入）或拖动自由旋转；直接链接附加 ?view=top。采用正交投影，机器等大。默认 8 路，支持 4–32 路调节，附加 ?count=16 可打开 16 路；切换路数保留角度、自动适配并重新分配频段。
+横卧路线基于 v0.2.0-corridor.1，默认侧俯视，可切换正俯视（从长边正面斜向看入）或拖动自由旋转；直接链接附加 ?view=top。采用正交投影，机器等大。默认 8 路，支持 4–64 路调节，附加 ?count=64 可打开 64 路；切换路数保留角度、自动适配并重新分配频段。映射默认低电平进度 32 → 高电平进度 0（躯干全伸出），可在页面编辑两端姿态与响应曲线并自动保存在当前浏览器。
 
 每条路线使用独立分支、独立 worktree、独立预览路径。先在实验分支提交并验证，再更新 main 中对应的预览快照。
 预览目录中的 preview.json 记录来源分支、完整提交和基线标签。

@@ -64,17 +64,22 @@ export function restFromPhase(phase01=.38){
   return clamp(cubic(a.v,a.out.v,b.in.v,b.v,(low+high)/2));
 }
 
-/**
- * Direct loudness-to-position mapping, with no clock or oscillator.
- * Active loudness below .5 retracts; above .5 extends. A quiet-signal gate blends
- * the lowest .2–6% into rest so absent signal does not hold the machine retracted.
- */
-export function strokeFromLoudness(level,{rest=.5,active=true}={}){
-  const centre=clamp(finite(rest,.5)),loudness=clamp(finite(level));
-  if(!active||loudness<=.002)return centre;
-  const gatePosition=clamp((loudness-.002)/(.06-.002));
-  const gate=gatePosition*gatePosition*(3-2*gatePosition),signed=2*loudness-1;
-  return clamp(centre+gate*signed*(signed>=0?1-centre:centre));
+export const DEFAULT_MAPPING=Object.freeze({lowPhase:32,highPhase:0,response:1});
+export function normalizeMapping(value={}){
+  return {lowPhase:clamp(finite(value?.lowPhase,32),0,50),highPhase:clamp(finite(value?.highPhase,0),0,50),response:clamp(finite(value?.response,1),.25,4)};
+}
+/** Generator progress specifies endpoint poses. Interpolate their physical
+ * extensions directly, so the generator's timing plateaus don't clip loudness. */
+export function createStrokeMapper(options={}){
+  const mapping=normalizeMapping(options);
+  const low=1-restFromPhase(mapping.lowPhase/100),high=1-restFromPhase(mapping.highPhase/100);
+  return (level,active=true)=>{
+    const loudness=active?clamp(finite(level)):0;
+    return clamp(low+(high-low)*Math.pow(loudness,mapping.response));
+  };
+}
+export function strokeFromLoudness(level,options={}){
+  return createStrokeMapper(options)(level,options?.active??true);
 }
 
 /** Symmetric position interpolation: dt affects settling only, never the target. */
