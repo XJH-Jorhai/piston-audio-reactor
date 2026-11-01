@@ -1,5 +1,10 @@
-/** Eight rigidly rotated original machines, repeated along the head-to-foot axis. */
-export const COUNT=8,PITCH=3.5;
+/** Rigidly rotated original machines, repeated along the head-to-foot axis. */
+export const COUNT=8,MIN_COUNT=4,MAX_COUNT=32,PITCH=3.5;
+export function validateCount(count){
+  if(!Number.isInteger(count)||count<MIN_COUNT||count>MAX_COUNT)throw new RangeError('Channel count must be an integer from 4 to 32.');
+  return count;
+}
+export const arrayCenter=count=>[.5,.5,((validateCount(count)-1)*PITCH-3)/2];
 
 /** -90 degrees about X: the original +Z piston travel becomes upward +Y. */
 export function layPoint([x,y,z],offset=0){
@@ -27,8 +32,9 @@ export function machineParts(q,offset=0){
 }
 
 /** World-space AABB corners; a right-angle rigid rotation keeps these exact. */
-export function machineCorners(q,index){
-  if(!Number.isInteger(index)||index<0||index>=COUNT)throw new RangeError('Machine index must be 0–7.');
+export function machineCorners(q,index,count=COUNT){
+  validateCount(count);
+  if(!Number.isInteger(index)||index<0||index>=count)throw new RangeError('Machine index is outside the array.');
   const points=[];
   for(const part of machineParts(q,index*PITCH)){
     for(const x of [part.x,part.x+part.w])for(const y of [part.y,part.y+part.h])for(const z of [part.z,part.z+part.d])points.push([x,y,z]);
@@ -37,6 +43,7 @@ export function machineCorners(q,index){
 }
 
 /** Both endpoint poses bound every linear piston trajectory for every station. */
-export function framingCorners(){
-  return [0,1].flatMap(q=>Array.from({length:COUNT},(_,index)=>machineCorners(q,index)).flat());
+export function framingCorners(count=COUNT){
+  validateCount(count);
+  return [0,1].flatMap(q=>Array.from({length:count},(_,index)=>machineCorners(q,index,count)).flat());
 }

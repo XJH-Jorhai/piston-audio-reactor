@@ -1,5 +1,5 @@
 import {createCamera,framePoints,orbitAngles} from './camera.js';
-import {COUNT,PITCH,layPoint,machineParts,machineCorners,framingCorners} from './machine.js';
+import {COUNT,PITCH,layPoint,machineParts,machineCorners,framingCorners,validateCount,arrayCenter} from './machine.js';
 export {COUNT,PITCH,machineParts,machineCorners,framingCorners} from './machine.js';
 const textureNames=['iron_block','carved_pumpkin','pumpkin_side','pumpkin_top','piston_top','piston_side','piston_inner','piston_bottom'];
 const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
@@ -49,13 +49,13 @@ function facesForBox(p,emit){
   emit([x+w,y+h,z],[x,y+h,z],[x+w,y,z],material+'-back');
   emit([x,y,z+d],[x+w,y,z+d],[x,y,z],material+'-bottom');
 }
-function makeFloor(){
-  const faces=[],emit=(a,b,c,tile)=>faces.push({a,b,c,tile}),end=(COUNT-1)*PITCH+.4;
+function makeFloor(count){
+  const faces=[],emit=(a,b,c,tile)=>faces.push({a,b,c,tile}),end=(count-1)*PITCH+.4;
   emit([-1.5,-1.18,-3.4],[2.5,-1.18,-3.4],[-1.5,-1.18,end],'lane');
   for(let x=-2.5;x<=3.5;x+=1)emit([x,-1.17,-4],[x+.014,-1.17,-4],[x,-1.17,end+1],'grid');
   for(let z=-3.5;z<=end+1;z+=PITCH)emit([-2.5,-1.17,z],[3.5,-1.17,z],[-2.5,-1.17,z+.014],'grid');
   for(const x of [-1.48,-.025,1.025,2.48])emit([x,-1.025,-3.3],[x+.025,-1.025,-3.3],[x,-1.025,end],'rail');
-  for(let i=0;i<COUNT;i++){
+  for(let i=0;i<count;i++){
     const z=i*PITCH;
     facesForBox({x:-1.22,y:-1.14,z:z-3.14,w:3.44,h:.10,d:3.28,material:'plate'},emit);
     emit([-.1,-1.033,z-2.1],[1.1,-1.033,z-2.1],[-.1,-1.033,z+.05],'shadow');
@@ -64,12 +64,13 @@ function makeFloor(){
   return faces;
 }
 
-export function createSceneRenderer(canvas,labelCanvas,images,{forceCpu=false}={}){
-  const atlas=buildAtlas(images),points=framingCorners(),floor=makeFloor(),labels=labelCanvas.getContext('2d');
-  let camera=createCamera('side');
+export function createSceneRenderer(canvas,labelCanvas,images,{forceCpu=false,count=COUNT}={}){
+  validateCount(count);
+  const atlas=buildAtlas(images),labels=labelCanvas.getContext('2d');
+  let points=framingCorners(count),floor=makeFloor(count),camera=createCamera('side',{count});
   const view={mode:'side',zoom:1,panX:0,panY:0,centerX:0,centerY:0,width:1,height:1,scale:1,dpr:1,pivot:[...camera.target]};
   let revision=0,backend,lastDraw=-1;
-  const lastStrokes=new Float32Array(COUNT),lastEnergy=new Float32Array(COUNT);
+  let lastStrokes=new Float32Array(count),lastEnergy=new Float32Array(count);
   const worldToScreen=point=>{const p=camera.project(point),s=view.scale*view.zoom;return [(p[0]-view.centerX)*s+view.width/2+view.panX,(p[1]-view.centerY)*s+view.height/2+view.panY,-p[2]];};
   const gl=forceCpu?null:canvas.getContext('webgl2',{alpha:true,antialias:true,preserveDrawingBuffer:true});
   if(gl){
@@ -123,7 +124,7 @@ export function createSceneRenderer(canvas,labelCanvas,images,{forceCpu=false}={
   function resize(){
     const rect=canvas.getBoundingClientRect();view.width=Math.max(1,rect.width);view.height=Math.max(1,rect.height);view.dpr=backend.name==='cpu'?1:Math.min(devicePixelRatio||1,2);
     canvas.width=Math.round(view.width*view.dpr);canvas.height=Math.round(view.height*view.dpr);labelCanvas.width=canvas.width;labelCanvas.height=canvas.height;
-    camera=createCamera(view.mode,{aspect:view.width/view.height,...(view.mode==='free'?{angles:camera.angles,target:view.pivot}:{})});
+    camera=createCamera(view.mode,{count,aspect:view.width/view.height,...(view.mode==='free'?{angles:camera.angles,target:view.pivot}:{})});
     const framed=framePoints(camera,points,view.width,view.height);view.scale=framed.scale;revision++;
     if(!view.focused){view.centerX=framed.centerX;view.centerY=framed.centerY;}
   }
@@ -131,33 +132,34 @@ export function createSceneRenderer(canvas,labelCanvas,images,{forceCpu=false}={
   function draw(strokes,energy){
     if(lastDraw===revision&&!strokes.some((v,i)=>Math.abs(v-lastStrokes[i])>.00008)&&!energy.some((v,i)=>Math.abs(v-lastEnergy[i])>.00008))return;
     const cached=backend.start();if(!cached){for(const f of floor)backend.face(f.a,f.b,f.c,f.tile);backend.cacheFloor?.();}
-    for(let i=0;i<COUNT;i++){
+    for(let i=0;i<count;i++){
       for(const [x,e] of [[-1,1-strokes[i]],[0,strokes[i]],[1,1-strokes[i]]]){const z=i*PITCH,dx=.22*(e+.3),dz=.07*(e+.3);backend.face([x-.10+dx,-1.031,z-2.10+dz],[x+1.10+dx,-1.031,z-2.10+dz],[x-.10+dx,-1.031,z+(x===0?.10:-.90)+dz],'shadow');}
       for(const p of machineParts(strokes[i],i*PITCH))facesForBox(p,backend.face);
-      if(energy[i]>.001){const z=i*PITCH-2.75;backend.face([2.27,-1.023,z],[2.37,-1.023,z],[2.27,-1.023,z+2.6*energy[i]],i<3?'low':i<6?'mid':'high');}
+      if(energy[i]>.001){const z=i*PITCH-2.75;backend.face([2.27,-1.023,z],[2.37,-1.023,z],[2.27,-1.023,z+2.6*energy[i]],i/count<1/3?'low':i/count<2/3?'mid':'high');}
     }
     backend.finish();
     labels.setTransform(view.dpr,0,0,view.dpr,0,0);labels.clearRect(0,0,view.width,view.height);
     labels.textAlign='center';labels.font='9px ui-monospace,Consolas,monospace';let previousLabel=null;
-    for(let i=0;i<COUNT;i++){
+    for(let i=0;i<count;i++){
       const [x,y]=worldToScreen([2.70,-1.02,i*PITCH-1.45]);
       if(x<0||x>view.width||y<0||y>view.height)continue;
-      if(previousLabel&&Math.hypot(x-previousLabel[0],y-previousLabel[1])<13&&i<COUNT-1)continue;
-      if(i<COUNT-1){const last=worldToScreen([2.70,-1.02,(COUNT-1)*PITCH-1.45]);if(Math.hypot(x-last[0],y-last[1])<12)continue;}
+      if(previousLabel&&Math.hypot(x-previousLabel[0],y-previousLabel[1])<13&&i<count-1)continue;
+      if(i<count-1){const last=worldToScreen([2.70,-1.02,(count-1)*PITCH-1.45]);if(Math.hypot(x-last[0],y-last[1])<12)continue;}
       previousLabel=[x,y];
-      labels.fillStyle=i<3?'#d2aa7f':i<6?'#b7c29c':'#91b0ad';labels.globalAlpha=.55+.45*energy[i];labels.fillText(String(i+1).padStart(2,'0'),x,y+10);
+      labels.fillStyle=i/count<1/3?'#d2aa7f':i/count<2/3?'#b7c29c':'#91b0ad';labels.globalAlpha=.55+.45*energy[i];labels.fillText(String(i+1).padStart(2,'0'),x,y+10);
     }
     labels.globalAlpha=1;
     lastStrokes.set(strokes);lastEnergy.set(energy);lastDraw=revision;
   }
-  return {backend:backend.name,draw,worldToScreen,get viewMode(){return view.mode;},get angles(){return {...camera.angles};},get zoom(){return view.zoom;},
-    setView(mode){if(mode==='free'){this.orbit(0,0);return;}camera=createCamera(mode,{aspect:view.width/view.height});view.mode=mode;view.pivot=[...camera.target];view.zoom=1;view.panX=view.panY=0;view.focused=false;const framed=framePoints(camera,points,view.width,view.height);view.scale=framed.scale;view.centerX=framed.centerX;view.centerY=framed.centerY;revision++;},
-    orbit(dx,dy){const before=camera.project(view.pivot);camera=createCamera('free',{angles:orbitAngles(camera.angles,dx,dy),target:view.pivot});const after=camera.project(view.pivot);view.centerX+=after[0]-before[0];view.centerY+=after[1]-before[1];view.mode='free';revision++;},
+  return {backend:backend.name,draw,worldToScreen,get count(){return count;},get viewMode(){return view.mode;},get angles(){return {...camera.angles};},get zoom(){return view.zoom;},
+    setCount(value){validateCount(value);if(value===count)return;count=value;points=framingCorners(count);floor=makeFloor(count);camera=createCamera(view.mode,{count,angles:camera.angles});view.pivot=[...camera.target];lastStrokes=new Float32Array(count);lastEnergy=new Float32Array(count);view.focused=false;view.zoom=1;view.panX=view.panY=0;const framed=framePoints(camera,points,view.width,view.height);view.scale=framed.scale;view.centerX=framed.centerX;view.centerY=framed.centerY;revision++;},
+    setView(mode){if(mode==='free'){this.orbit(0,0);return;}camera=createCamera(mode,{count,aspect:view.width/view.height});view.mode=mode;view.pivot=[...camera.target];view.zoom=1;view.panX=view.panY=0;view.focused=false;const framed=framePoints(camera,points,view.width,view.height);view.scale=framed.scale;view.centerX=framed.centerX;view.centerY=framed.centerY;revision++;},
+    orbit(dx,dy){const before=camera.project(view.pivot);camera=createCamera('free',{count,angles:orbitAngles(camera.angles,dx,dy),target:view.pivot});const after=camera.project(view.pivot);view.centerX+=after[0]-before[0];view.centerY+=after[1]-before[1];view.mode='free';revision++;},
     setZoom(value){view.zoom=clamp(value,.65,12);revision++;},
     pan(dx,dy){view.panX+=dx;view.panY+=dy;revision++;},
-    reset(){view.zoom=1;view.panX=view.panY=0;const framed=framePoints(camera,points,view.width,view.height);view.centerX=framed.centerX;view.centerY=framed.centerY;view.pivot=[.5,.5,((COUNT-1)*PITCH-3)/2];view.focused=false;revision++;},
+    reset(){view.zoom=1;view.panX=view.panY=0;const framed=framePoints(camera,points,view.width,view.height);view.centerX=framed.centerX;view.centerY=framed.centerY;view.pivot=arrayCenter(count);view.focused=false;revision++;},
     detail(){this.focus(3);},
-    focus(index){const framed=framePoints(camera,[0,1].flatMap(q=>machineCorners(q,index)),view.width,view.height);view.zoom=clamp(framed.scale*.83/view.scale,.65,12);view.panX=view.panY=0;view.centerX=framed.centerX;view.centerY=framed.centerY;view.pivot=[.5,.5,index*PITCH-1.5];view.focused=true;revision++;},
+    focus(index){const framed=framePoints(camera,[0,1].flatMap(q=>machineCorners(q,index,count)),view.width,view.height);view.zoom=clamp(framed.scale*.83/view.scale,.65,12);view.panX=view.panY=0;view.centerX=framed.centerX;view.centerY=framed.centerY;view.pivot=[.5,.5,index*PITCH-1.5];view.focused=true;revision++;},
     dispose(){observer.disconnect();backend.dispose();}
   };
 }

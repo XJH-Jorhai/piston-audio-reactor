@@ -1,4 +1,4 @@
-import {COUNT,PITCH} from './machine.js';
+import {COUNT,PITCH,arrayCenter,validateCount} from './machine.js';
 const subtract=(a,b)=>a.map((v,i)=>v-b[i]);
 export const dot=(a,b)=>a.reduce((sum,value,i)=>sum+value*b[i],0);
 const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
@@ -14,7 +14,8 @@ export function orbitAngles(angles,dx,dy){
 export function layoutYaw(aspect=2.5){
   const mix=Math.min(1,Math.max(0,1.8-aspect));return (12+43*mix)*Math.PI/180;
 }
-export function createCamera(mode='side',{aspect=2.5,angles,target=[.5,.5,((COUNT-1)*PITCH-3)/2]}={}){
+export function createCamera(mode='side',{aspect=2.5,angles,count=COUNT,target=arrayCenter(count)}={}){
+  validateCount(count);
   if(!VIEW_MODES.includes(mode))throw new RangeError('Unknown camera view.');
   const angle=layoutYaw(aspect),orientation=orbitAngles(angles||{yaw:mode==='top'?0:angle,elevation:52*Math.PI/180,roll:mode==='top'?angle:0},0,0);
   const {yaw,elevation,roll}=orientation;
@@ -26,8 +27,8 @@ export function createCamera(mode='side',{aspect=2.5,angles,target=[.5,.5,((COUN
     right=originalRight.map((v,i)=>v*Math.cos(roll)-originalUp[i]*Math.sin(roll));
     up=originalRight.map((v,i)=>v*Math.sin(roll)+originalUp[i]*Math.cos(roll));
   }
-  const eye=target.map((value,i)=>value-forward[i]*48);
-  return {mode,angles:orientation,target:[...target],projection:'orthographic',eye,forward,right,up,near:.2,far:180,
+  const distance=Math.max(48,count*PITCH*.7+8),eye=target.map((value,i)=>value-forward[i]*distance);
+  return {mode,angles:orientation,target:[...target],projection:'orthographic',eye,forward,right,up,near:.2,far:Math.max(180,distance+count*PITCH+10),
     project(point){const relative=subtract(point,eye);return [dot(relative,right),-dot(relative,up),dot(relative,forward)];}
   };
 }
