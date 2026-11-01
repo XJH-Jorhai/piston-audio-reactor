@@ -1,51 +1,93 @@
-# 线性开凿声场 · Piston Audio Reactor
+# 让声谱，推动开凿。
 
-保留原版开凿机的站立造型与 X 轴线性排列，在独立分支中同步横卧版的相机、音频映射与开发者工具。默认 16 路，支持 4–64 路逐路调节和 8/16/32/64 快捷按钮。
+用 Minecraft 原版开凿机展示音乐频谱。声音越强，躯干越向外伸出，两侧铁块同步反向移动；活塞底座和南瓜固定。
 
-- 演示：https://xjh-jorhai.github.io/piston-audio-reactor/
-- 分支：experiment/linear-modern；标签：v0.2.0-linear.5。
-- 横卧版：https://xjh-jorhai.github.io/piston-audio-reactor/experiments/lying-eight/
-- 旧线性版：https://xjh-jorhai.github.io/piston-audio-reactor/experiments/linear-legacy/
-- 长廊版：https://xjh-jorhai.github.io/piston-audio-reactor/experiments/perspective-corridor/
+当前定格版本：[v1.0.0](https://github.com/XJH-Jorhai/piston-audio-reactor/releases/tag/v1.0.0)（2026-11-02）。三个版本可以在同一个标签页内切换，共用同一个播放器，音乐继续从当前位置播放。
 
-## 相机与造型
+## 在线体验
 
-站立机器沿 X 轴以 3.9 格间距排列，中央躯干前伸，两侧手臂同步反向。南瓜、活塞底座固定，仅活塞臂、顶板和铁块伸缩。所有六个面均参与深度绘制，正交投影保持远近机器等大。
+| 版本 | 展示方式 | 打开 |
+| --- | --- | --- |
+| 线性版 | 站立机器横向排列，正交投影 | [线性版](https://xjh-jorhai.github.io/piston-audio-reactor/?v=continuous-1) |
+| 横卧版 | 机器旋转 90° 横卧，形成三列联动轨道 | [横卧版](https://xjh-jorhai.github.io/piston-audio-reactor/experiments/lying-eight/?v=continuous-1) |
+| 透视长廊 | 近大远小的纵深阵列 | [长廊版](https://xjh-jorhai.github.io/piston-audio-reactor/experiments/perspective-corridor/?v=continuous-1) |
+| 播放器视角 | 用户记录的长廊构图 | [64 路播放器视角](https://xjh-jorhai.github.io/piston-audio-reactor/experiments/perspective-corridor/?count=64&preset=player-view&v=continuous-1) |
 
-拖动自由旋转，Shift/右键拖动或启用“平移”按钮后平移，滚轮缩放；触屏单指旋转、双指缩放和平移。提供正俯视、侧俯视、适配、单台聚焦与全屏。画布方向键旋转，Shift 加方向键平移，+/− 缩放，Home 适配。可点击频段聚焦对应机器。
+顶部“线性版 / 横卧版 / 长廊版”直接切换画面。切换会保留音频进度、暂停状态、音量和本地音源，浏览器前进 / 后退同样有效。在线演示跟随 `main`；需要固定源码时，请下载 Release 中的标签归档。
 
-## 音频与映射
+## 功能与操作
 
-默认音频 Assumptions / Sam Gellaitry，浏览器允许时尝试自动播放，否则点击启动或页面开始。支持本地音频导入、暂停、进度、音量、响应强度和动作平滑。FFT 4096，将 40 Hz–16 kHz 按路数分为对数频段；每路频谱 RMS 响度直接控制机械位置，没有周期载波。
+- **4–64 路频谱**：可连续调节，也可快捷选择 8 / 16 / 32 / 64 路。频谱覆盖 40 Hz–16 kHz，随路数重新分配对数频段。
+- **直接音频驱动**：每个频段的 RMS 频谱响度直接控制机械位置，没有周期运动或预制循环；机械行程不超过一格。
+- **电平 → 行程**：低 / 高电平姿态和响应曲线都可调。姿态使用生成器进度：`0%` 为躯干全伸出，`50%` 为全收回。静音或暂停时平滑回到低电平姿态。
+- **独立参数与构图**：各版本保留自己的映射和本次会话中的观察构图。映射自动保存在当前浏览器，路数随版本切换带入。
+- **自由观察**：拖动旋转，Shift / 右键拖动平移，滚轮缩放；触屏支持单指旋转、双指平移和缩放。方向键旋转，Shift + 方向键平移，Home 适配。
+- **视角切换**：内置记录视角只修改相机，不改变路数或响应参数。线性版保留两个用户视角，横卧版保留六个，长廊版包含“播放器视角”。
+- **视角 JSON**：线性版和长廊版保留开发者面板，可记录、导入和导出视角。开发者记录载入时恢复完整构图、路数和响应参数；横卧版隐藏该面板。各版本的记录分别保存，透视与正交记录不能混用。
+- **更换音频**：支持本地音频文件、播放进度和音量控制。文件在浏览器本机播放与分析，不上传服务器。
 
-电平→行程面板可修改低电平姿态、高电平姿态与响应曲线，默认生成器进度 38→0；0 为躯干全伸出，50 为全收回。两端物理位移之间插值，响应曲线小于 1 时突出弱信号，大于 1 时突出强信号。静音停在低电平端点。设置自动保存在当前浏览器，线性版与横卧版分别保存。
+默认音源是 **Assumptions — Sam Gellaitry**。首次进入会尝试自动播放；浏览器限制自动播放时，点击“启动声场”即可。切换版本不会重新触发从头播放。
 
-## 开发者视角记录
+| 初始设置 | 线性版 | 横卧版 | 长廊版 |
+| --- | --- | --- | --- |
+| 频谱路数 | 16 | 8 | 16 |
+| 低电平姿态 → 高电平姿态 | 38% → 0% | 32% → 0% | 38% → 0% |
 
-页面底部保留“开发者 · 视角记录”。输入名称并记录当前构图，可保存多个、载入恢复、分别或批量导出 JSON，也可导入 JSON。记录完整角度、缩放、平移、目标点、旋转枢轴、画幅、路数、选择和响应参数。相同画幅精确恢复，其他画幅等比缩放。
+浏览器已保存的映射会优先使用；页面提供恢复默认按钮。链接可附加 `?count=64`；长廊的 `preset=player-view` 只指定相机，不强制路数。
 
-视角文件采用 `piston-audio-reactor.camera-views` v1，使用 `layout: linear` 区分站立阵列；每个版本分别保存记录。最多 200 条，导入前完整校验。线性版使用用户新提供的两个快捷视角“默认视角”和“开凿者”；只恢复相机，不修改当前路数或响应参数。可用 ?preset=saved-1 或 saved-2 直接打开，仍保留开发者面板记录自己的构图。
+## 本地运行
 
-## 运行与验证
+需要 Node.js 20+。项目没有运行时外部依赖，无需安装 npm 包。
 
-Node.js 20+，无外部运行时依赖：
+```sh
+git clone https://github.com/XJH-Jorhai/piston-audio-reactor.git
+cd piston-audio-reactor
+npm run dev
+```
 
-    npm run dev
-    npm test
-    npm run build
+打开 <http://127.0.0.1:4173/>。从仓库根目录运行，可完整体验三个版本的连续切换。
 
-默认 http://127.0.0.1:4173/。共享 WebGL2 图集/深度缓冲，提供逐像素 CPU 回退（?renderer=cpu）。支持 ?count=64 直达 64 路。dist/ 可部署为静态网站。
+```sh
+npm test        # 根目录线性版与共享逻辑测试
+npm run build  # 构建完整静态站点到 dist/
+```
 
-测试覆盖站立刚体几何、固定底座与完全收回、反向伸缩、4–64 路分配、自由相机裁剪和取景、端点映射/曲率、视角文件往返与画幅适配。旧版通过标签和独立预览保留。
+构建后的 `dist/` 需要通过 HTTP 静态服务器提供访问。三个版本的页面、脚本和素材必须一起部署；不要单独复制某一个 HTML。WebGL2 优先渲染，提供 CPU 深度渲染回退。
 
-原版纹理、MIT 参考项目和用户音源的来源见 [CREDITS.md](CREDITS.md)。
+## 仓库结构
 
-标题统一为“让声谱，推动开凿。”，标题下的造型说明已移除。频谱柱宽与间距随路数和容器宽度自适应，4–64 路均完整排列，不使用横向滚动条。
+```text
+src/                              线性版与共享播放器、页面切换逻辑
+assets/                           默认音源与 Minecraft 纹理
+experiments/lying-eight/           横卧版完整页面和运行时
+experiments/perspective-corridor/  长廊版完整页面和运行时
+experiments/linear-legacy/         原始线性版归档
+scripts/                          本地服务、静态构建与历史快照工具
+tests/                            根目录自动检查
+licenses/                         参考项目的原始许可
+releases/                         定格版本记录
+```
 
-从旧版升级时，首次将低电平端点迁移为 38%，同时保留已有高电平端点与响应曲率；之后用户自行修改的映射仍照常保存。
+## 版本与分支
 
-## 三版连续切换
+整站固定标签为 **`v1.0.0`**，对应已验证上线的提交 `71df7b2`。此标签不随后续开发移动。
 
-顶部“线性版 / 横卧版 / 长廊版”在当前标签页内切换。共用同一个 audio 元素、AudioContext、音源节点及分析器，保留进度、暂停、音量、播放速率及本地导入音源；不会重新开始音乐。浏览器前进/后退同样连续播放。每个版本的构图和响应参数在本次页面会话中保留，路数随切换带入。
+| 路线源码 | 保留标签 |
+| --- | --- |
+| 线性版 | `v0.2.0-linear.5` |
+| 横卧版 | `v0.3.0-lying-eight.11` |
+| 长廊版 | `v0.3.0-corridor.3` |
+| 原始线性基线 | `v0.1.0-linear` |
 
-完整的跨版本本地预览从 main 工作目录运行 npm run dev，三个入口及其 src/bootstrap.js、src/audio-session.js 必须一同部署。各实验分支仍保留独立几何、相机和发布快照；直接进入任一正式入口都可开始同页切换。
+云端只保留长期分支 `main`。已完成的三个实验分支收拢到上述标签，源码历史与页面都保留；本地已有实验工作目录不删除。后续功能使用短期 `feature/*` 分支，完成后合回 `main` 并清理分支。
+
+[定格记录](releases/v1.0.0.md)包含完整提交和验证结果；[展示路线与回退](EXPERIMENTS.md)说明历史来源、恢复方式及后续开发约定。各路线 `package.json` 继续保留其内部版本号，整站 Release 版本以 `v1.0.0` 标签为准。
+
+## 来源与许可
+
+- 开凿机几何基于独立定版的 [Piston Letter Studio v1.2.0](https://github.com/XJH-Jorhai/piston-letter-studio/releases/tag/v1.2.0)。
+- 音频分析与交互参考 Andy Wang 的 [reactor-audio-visualizer](https://github.com/wzk112/reactor-audio-visualizer)，原始 MIT 许可保存在 `licenses/`。
+- Minecraft 原版材质来自 [InventivetalentDev/minecraft-assets](https://github.com/InventivetalentDev/minecraft-assets/tree/1.21.4/assets/minecraft/textures/block) 提取镜像，归 Mojang / Microsoft 所有。
+- 默认音源由用户提供，曲名 Assumptions，歌手 Sam Gellaitry。
+
+完整固定来源、文件路径与授权说明见 [CREDITS.md](CREDITS.md)。参考项目的 MIT 许可不覆盖 Minecraft 材质和音乐。

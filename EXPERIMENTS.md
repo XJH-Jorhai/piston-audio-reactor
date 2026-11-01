@@ -1,73 +1,53 @@
 # 展示路线与回退
 
-## 基线
+## 当前状态
 
-- 当前线性演示：https://xjh-jorhai.github.io/piston-audio-reactor/
-- 原始线性演示：https://xjh-jorhai.github.io/piston-audio-reactor/experiments/linear-legacy/
-- 基线标签：v0.1.0-linear
-- 基线提交：f04b95726cf4b55d38580165197de485ff66e2c1
-- main 当前为用户要求同步升级的线性版（v0.2.0-linear.5），默认低电平进度 38 → 高电平进度 0；原始 v0.1.0-linear 通过标签与独立预览保留。透视长廊维持独立快照。
+2026-11-02 将用户确认的在线功能固定为整站 `v1.0.0`。标签对应提交 `71df7b29394f1299d1678d2c4ea224f6dc525cf3`；之后的 README 和分支整理提交只更新文档，不改变该定格快照。
 
-## 实验路线
+云端长期分支仅保留 `main`。三个已完成实验分支的最新源码由标签保留，线上三个页面依然共存。本地实验 worktree 和本地分支保留，不删除文件或历史。
 
-| 路线 | 分支 | 独立工作目录 | 预览 |
-| --- | --- | --- | --- |
-| 透视长廊（4–64 路） | experiment/perspective-corridor | ../piston-audio-reactor-corridor | https://xjh-jorhai.github.io/piston-audio-reactor/experiments/perspective-corridor/ |
-| 横卧阵列（4–64 路） | experiment/lying-eight | ../piston-audio-reactor-lying-eight | https://xjh-jorhai.github.io/piston-audio-reactor/experiments/lying-eight/ |
-| 线性版升级（4–64 路） | experiment/linear-modern | ../piston-audio-reactor-linear-modern | https://xjh-jorhai.github.io/piston-audio-reactor/ |
-| 原始线性版 | v0.1.0-linear 标签 | — | https://xjh-jorhai.github.io/piston-audio-reactor/experiments/linear-legacy/ |
+## 历史来源
 
-横卧路线基于 v0.2.0-corridor.1，默认侧俯视，可切换正俯视（从长边正面斜向看入）或拖动自由旋转；直接链接附加 ?view=top。采用正交投影，机器等大。默认 8 路，支持 4–64 路调节，附加 ?count=64 可打开 64 路；切换路数保留角度、自动适配并重新分配频段。映射默认低电平进度 32 → 高电平进度 0（躯干全伸出），可在页面编辑两端姿态与响应曲线并自动保存在当前浏览器。
+| 路线 | 原实验分支（已收拢） | 固定标签 | 完整源码提交 | main 中的页面 |
+| --- | --- | --- | --- | --- |
+| 线性升级版 | experiment/linear-modern | v0.2.0-linear.5 | 6a01016383799b60baedbe0e937453f216d711d4 | 根目录 |
+| 横卧阵列 | experiment/lying-eight | v0.3.0-lying-eight.11 | ec9bcf0150c651996d3b2037f1a131a0088e58ee | experiments/lying-eight/ |
+| 透视长廊 | experiment/perspective-corridor | v0.3.0-corridor.3 | 29a83aea6c5c471f796048e007db358f8464044e | experiments/perspective-corridor/ |
+| 原始线性版 | 原始基线 | v0.1.0-linear | f04b95726cf4b55d38580165197de485ff66e2c1 | experiments/linear-legacy/ |
 
-横卧版的六个用户视角以 ?preset=saved-1 至 saved-6 切换，保持当前路数与映射独立，开发者面板隐藏。线性版沿用相同控制核心，保留站立造型和 X 轴排列，开发者记录/JSON 继续可用，保存空间按版本分开。
+`linear-release.json` 和两个预览目录内的 `preview.json` 是发布时的来源记录，其中的分支字段代表历史来源，不代表云端仍保留该分支。原始长廊 `v0.2.0-corridor.1` 及其余历史标签也继续保留。
 
-透视长廊 v0.3.0-corridor.3 同步 4–64 路、自由旋转/平移/缩放、响应强度和平滑、电平两端姿态与响应曲线，默认 38 → 0。保留原始近大远小长廊构图和轻度远景雾化，增加俯视预设。开发者视角库独立保存透视距离、构图和响应参数，支持 JSON 导入/导出；不能与正交视角记录混用。频谱完整适配容器，标题统一且移除序号和副标题。旧版 v0.2.0-corridor.1 标签继续保留。
+## 恢复固定版本
 
-连续切换版本：线性 v0.2.0-linear.5、横卧 v0.3.0-lying-eight.11、长廊 v0.3.0-corridor.3。各入口由 bootstrap 加载对应可挂载应用，顶部三个版本使用 History API 同页切换，保留同一 audio 元素和 Web Audio 图；音频进度、暂停、本地音源不随画面重置。每次卸载停止该视图的 RAF/ResizeObserver 并通过 AbortController 移除事件。三套运行时须一起发布；旧版原始线性快照仍独立。长廊新增用户 JSON 的“播放器视角”（?preset=player-view），只切相机，不改变路数与响应映射。
+```sh
+git fetch origin --tags
+# 在新目录查看完整定格版，不改动当前 main：
+git worktree add --detach ../piston-audio-reactor-v1.0.0 v1.0.0
+```
 
-线性升级先在独立分支提交并推送，再从 main 执行 `node scripts/sync-linear.mjs --source ../piston-audio-reactor-linear-modern`。脚本检查源提交、远端和工作区状态，首次同步前归档原始线性页，只复制根站点源码/测试与文档；不覆盖实验快照。linear-release.json 记录根站点来源提交。撤回根站点升级可 revert 对应发布提交。
+查看某一路线的原始源码，可将最后一个参数换成对应标签。例如 `v0.3.0-corridor.3` 是长廊源码分支的完整快照；`v1.0.0` 则包含可一起部署的三个入口。
 
-每条路线使用独立分支、独立 worktree、独立预览路径。先在实验分支提交并验证，再更新 main 中对应的预览快照。
-预览目录中的 preview.json 记录来源分支、完整提交和基线标签。
+历史标签不移动、不覆盖。GitHub Release 自动提供固定标签的源码归档。
 
-## 新开一条路线
+## 后续开发
 
-在主目录执行，目录名和分支名按路线更换：
+以当前 `main` 或固定标签为起点建立新的短期分支，不重新保留三套长期云端实验分支：
 
-    git worktree add -b experiment/grid ../piston-audio-reactor-grid v0.1.0-linear
-    git worktree list
+```sh
+git fetch origin
+git worktree add -b feature/player ../piston-player origin/main
+# 若要严格从定格功能起步，将 origin/main 换成 v1.0.0。
+```
 
-进入新目录后开发、测试和提交。不要在两个目录中检出同一分支。
+主工作树中的线性根目录、横卧目录和长廊目录已包含全部运行时。改动共享播放器、切换入口或公共控件时，三个版本一并检查。合并功能后删除已完成的短期分支；需要保留的阶段结果使用标签记录。
 
-## 发布某一路线的预览
+原有 `scripts/sync-linear.mjs` 与 `scripts/publish-preview.mjs` 保留为历史工作流工具，会校验对应实验源分支是否已提交并推送。云端实验分支收拢后，不直接沿用旧推送命令；若专门恢复该工作流，需先显式恢复并推送对应源分支。普通后续开发以 main 内已有目录为准。
 
-先在实验 worktree 中完成提交并推送：
+## 三版行为
 
-    git push -u origin experiment/perspective-corridor
-
-再回到 main 的工作目录：
-
-    node scripts/publish-preview.mjs --source ../piston-audio-reactor-corridor --slug perspective-corridor
-    git add experiments/perspective-corridor
-    git commit -m "Update perspective corridor preview"
-    git push origin main
-
-该命令检查来源 worktree 与当前仓库是否一致、来源是否已提交；只更新 experiments/ 下指定路线的静态快照。
-来源必须已推送；可用 --base-tag 指定其他基线标签，脚本会验证该标签是来源提交的祖先。例如横卧路线使用 --source ../piston-audio-reactor-lying-eight --slug lying-eight --base-tag v0.2.0-corridor.1。
-不修改根页面，不合并实验分支。静态快照可独立打开，其素材与许可随快照保存。
-
-## 比较与回退
-
-比较实验源码：
-
-    git diff v0.1.0-linear...experiment/perspective-corridor
-    git log --oneline --all --decorate
-
-开一个只读思路的基线工作目录供本地对照：
-
-    git worktree add --detach ../piston-audio-reactor-baseline v0.1.0-linear
-
-撤销实验中的某次更改，用 git revert 加新提交；撤销已发布预览，用 git revert 撤销对应的预览快照提交。
-这些操作保留历史，避免重写 main 或移动基线标签。无需删除或覆盖其他路线。
-
-线性版采用用户提供的“默认视角”和“开凿者”两种相机构图，路数与映射保持独立。两版主标题统一，频谱随通道数自适应且完整显示。
+- 三个入口使用同页切换，保留同一个 audio 元素、AudioContext、音源节点和分析器；音频位置、暂停与本地音源不重置。
+- 每次卸载停止旧视图的动画循环与 ResizeObserver，并用 AbortController 清理事件。
+- 路数支持 4–64，切换版本带入当前路数；各版本映射分别保存在浏览器。
+- 线性版两个用户视角、横卧版六个用户视角、长廊“播放器视角”均为相机快捷方式，不改变路数和响应参数。
+- 线性、长廊保留开发者视角 JSON；横卧版隐藏开发者面板。载入完整开发者记录会恢复该记录的路数和响应设置。
+- 原始线性版归档单独保留，不接入新的连续切换会话。
