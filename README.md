@@ -1,6 +1,6 @@
 # 让声谱，推动开凿。 · 透视长廊版
 
-v0.3.0-corridor.2，独立分支 experiment/perspective-corridor。默认保留原始近大远小的长廊构图；旧版本 v0.2.0-corridor.1 标签可用于对比和回退。
+v0.3.0-corridor.3，独立分支 experiment/perspective-corridor。默认保留原始近大远小的长廊构图；旧版本 v0.2.0-corridor.1 标签可用于对比和回退。
 
 - [长廊 Demo](https://xjh-jorhai.github.io/piston-audio-reactor/experiments/perspective-corridor/)
 - [线性版](https://xjh-jorhai.github.io/piston-audio-reactor/) · [横卧版](https://xjh-jorhai.github.io/piston-audio-reactor/experiments/lying-eight/)

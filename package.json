@@ -1,6 +1,6 @@
 {
   "name": "piston-audio-reactor",
-  "version": "0.3.0-corridor.2",
+  "version": "0.3.0-corridor.3",
   "private": true,
   "type": "module",
   "description": "Perspective Minecraft piston audio corridor with 4–64 bands, free orbit and editable stroke mapping.",
