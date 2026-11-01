@@ -114,7 +114,7 @@ function frame(now){
 }
 renderBands();syncSettings();requestAnimationFrame(frame);
 try{
-  renderer=createSceneRenderer(canvas,$('labels'),await loadTextures(),{forceCpu:new URLSearchParams(location.search).get('renderer')==='cpu'});canvas.dataset.machines=COUNT;canvas.dataset.renderer=renderer.backend;syncView();updateStatus();startAudio();
+  renderer=createSceneRenderer(canvas,$('labels'),await loadTextures(),{forceCpu:new URLSearchParams(location.search).get('renderer')==='cpu'});canvas.dataset.machines=COUNT;canvas.dataset.renderer=renderer.backend;canvas.dataset.projection='perspective';syncView();updateStatus();startAudio();
 }catch(error){$('scene-error').hidden=false;$('scene-error').textContent='开凿机加载失败：'+error.message;$('status').textContent='可视化暂不可用';}
 window.addEventListener('pagehide',()=>{audio.pause();context?.suspend();});
 window.addEventListener('pageshow',event=>{if(event.persisted)updateStatus();});

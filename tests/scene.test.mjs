@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {machineParts,projectPoint,COUNT,PITCH} from '../src/scene.js';
 import {restFromPhase,strokeFromLoudness} from '../src/spectrum.js';
+import {createCamera} from '../src/camera.js';
 test('sixteen machines form one equally spaced line with fixed piston housings',()=>{
   assert.equal(COUNT,16);
   const rest=restFromPhase(.38),fixed=machineParts(rest).filter(p=>p.id.endsWith('-base')||p.id==='pumpkin');
@@ -24,8 +25,9 @@ test('sixteen machines form one equally spaced line with fixed piston housings',
   }
 });
 test('view ray changes depth without changing projected position',()=>{
-  const origin=projectPoint([0,0,0]),ray=[70/130,(28*70/130+58)/145,1],point=projectPoint(ray);
-  assert.ok(Math.abs(origin[0]-point[0])<1e-12);assert.ok(Math.abs(origin[1]-point[1])<1e-12);assert.ok(point[2]>origin[2]);
+  const camera=createCamera(),near=camera.eye.map((v,i)=>v+camera.forward[i]*10+camera.right[i]*2+camera.up[i]),far=near.map((v,i)=>camera.eye[i]+2*(v-camera.eye[i]));
+  const a=projectPoint(near),b=projectPoint(far);
+  assert.ok(Math.abs(a[0]-b[0])<1e-12);assert.ok(Math.abs(a[1]-b[1])<1e-12);assert.ok(Math.abs(b[2]-2*a[2])<1e-12);
 });
 test('high loudness extends the central golem and retracts the side blocks',()=>{
   const sideRest=restFromPhase(.38),rest=1-sideRest;

@@ -5,18 +5,18 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#111619">
   <meta name="description" content="16 台 Minecraft 原版开凿机，以真实音频频谱驱动活塞双向伸缩。">
-  <title>开凿声场 · Piston Audio Reactor</title>
+  <title>透视长廊试验 · 开凿声场</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111619'/%3E%3Cpath d='M6 21V12h5v9m3 0V6h5v15m3 0V15h5v6' stroke='%23f8ad52' stroke-width='3'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="./src/style.css">
 </head>
 <body>
   <header class="site-header">
     <a href="./" class="brand"><span class="brand-icon" aria-hidden="true">▤</span><span>PISTON<span class="brand-sub">AUDIO REACTOR</span></span></a>
-    <nav aria-label="项目链接"><a href="https://xjh-jorhai.github.io/piston-letter-studio/?v=1.2.0" target="_blank" rel="noopener">生成器 ↗</a><a href="https://github.com/XJH-Jorhai/piston-audio-reactor" target="_blank" rel="noopener">GitHub ↗</a></nav>
+    <nav aria-label="项目链接"><a href="https://xjh-jorhai.github.io/piston-audio-reactor/" target="_blank" rel="noopener">线性基线 ↗</a><a href="https://github.com/XJH-Jorhai/piston-audio-reactor/tree/experiment/perspective-corridor" target="_blank" rel="noopener">实验源码 ↗</a></nav>
   </header>
   <main>
     <section class="intro">
-      <div><p class="eyebrow">A LITTLE MECHANICS. A LOT OF MUSIC.</p><h1>让声音，驱动开凿。</h1><p class="intro-sub">16 台开凿机，一条机械声谱。</p></div>
+      <div><p class="eyebrow">EXPERIMENT 01 / PERSPECTIVE CORRIDOR</p><h1>声音，向纵深开凿。</h1><p class="intro-sub">前景放大，远处收束。16 台开凿机组成一条透视长廊。</p></div>
       <div class="intro-data"><div><strong>16</strong><span>独立频段</span></div><div><strong>38<span>%</span></strong><span>静止姿态</span></div><div><strong>±</strong><span>双向行程</span></div></div>
     </section>
     <section id="visualizer" class="scene-card" aria-label="开凿机音频可视化">
@@ -24,14 +24,14 @@
         <div class="scene-title"><span class="live-dot" id="live-dot"></span><span id="status" role="status">正在加载开凿机…</span></div>
         <div class="view-controls" role="group" aria-label="视角">
           <button id="zoom-out" type="button" aria-label="缩小视图" title="缩小">−</button><output id="zoom-label">100%</output><button id="zoom-in" type="button" aria-label="放大视图" title="放大">＋</button>
-          <button id="reset-view" type="button">总览</button><button id="detail-view" type="button">近看</button><button id="fullscreen" type="button" aria-label="切换全屏">全屏 ↗</button>
+          <button id="reset-view" type="button">长廊</button><button id="detail-view" type="button">前景</button><button id="fullscreen" type="button" aria-label="切换全屏">全屏 ↗</button>
         </div>
       </div>
       <div class="stage" id="stage">
         <div class="stage-grid" aria-hidden="true"></div>
         <canvas id="reactor" role="img" aria-label="16 台 Minecraft 原版开凿机组成的线性阵列，低频至高频从左至右排列"></canvas>
         <canvas id="labels" aria-hidden="true"></canvas>
-        <div class="stage-axis"><span>LINEAR ARRAY / 01—16</span><span>40 Hz → 16 kHz</span></div>
+        <div class="stage-axis"><span>PERSPECTIVE CORRIDOR / 01—16</span><span>40 Hz → 16 kHz</span></div>
         <button id="start" type="button" class="start-card"><span class="start-icon">▶</span><span><strong>启动声场</strong><small>Assumptions / Sam Gellaitry</small></span></button>
         <div id="scene-error" class="scene-error" role="alert" hidden></div>
         <div class="stage-help">拖动平移 · 滚轮缩放</div>
