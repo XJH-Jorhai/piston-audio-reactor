@@ -15,7 +15,7 @@
 该项目采用 MIT 许可，完整原始许可保留在
 [licenses/reactor-audio-visualizer.MIT.txt](licenses/reactor-audio-visualizer.MIT.txt)。
 
-本项目重新实现开凿机线性阵列、共享深度缓冲渲染、16 路对数频谱分配和双向行程映射。
+本试验重新实现 8 台横卧开凿机阵列、共享深度缓冲渲染、8 路对数频谱分配和双向行程映射。
 频谱响度直接决定活塞位置，静音时回中位；不使用周期载波，也不模拟游戏红石更新。
 
 ## Minecraft 原版材质

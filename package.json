@@ -1,6 +1,6 @@
 {
   "name":"piston-audio-reactor",
-  "version":"0.2.0-corridor.1",
+  "version":"0.3.0-lying-eight.1",
   "private":true,
   "type":"module",
   "description":"Sixteen Minecraft piston machines driven by a live audio spectrum.",

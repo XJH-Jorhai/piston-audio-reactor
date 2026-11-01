@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0-lying-eight.1 — experiment/lying-eight
+
+- Separate worktree based on v0.2.0-corridor.1; previous routes remain available.
+- Eight machines rigidly rotated 90 degrees into three parallel vertical piston lanes.
+- Equal-size orthographic side-oblique and front-oblique views; the front view looks across the long edge, retaining a 52-degree elevation.
+- Correctly rotated face textures, fixed housings/pumpkins, fully retractable rods, arm shading and height-linked shadows.
+- Eight direct logarithmic loudness bands, original rest posture and Assumptions audio.
+- Responsive full-stroke framing, URL view selection, GPU depth and CPU fallback.
+
+
 ## 0.2.0-corridor.1 — experiment/perspective-corridor
 
 - Independent worktree from the v0.1.0-linear baseline.

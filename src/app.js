@@ -2,7 +2,7 @@ import {createBands,measureBands,smoothLevels,smoothStrokes,restFromPhase,stroke
 import {COUNT,createSceneRenderer,loadTextures} from './scene.js';
 const $=id=>document.getElementById(id),audio=$('audio'),canvas=$('reactor');
 const defaults={gain:1.4,smooth:55,rest:38},settings={...defaults};
-let renderer,context,analyser,source,wave,bands=createBands(48000,4096),bins,objectUrl,autoPending=true,drag,previousTime=0,lastMeters=0;
+let renderer,context,analyser,source,wave,bands=createBands(48000,4096,COUNT),bins,objectUrl,autoPending=true,drag,previousTime=0,lastMeters=0;
 let energy=new Float32Array(COUNT),strokes=new Float32Array(COUNT).fill(1-restFromPhase(.38)),selected=-1;
 const EMPTY=new Float32Array(COUNT),bandButtons=[],frequencyLabel=hz=>hz>=1000?(hz/1000).toFixed(hz>=10000?0:1).replace(/\.0$/,'')+'k':Math.round(hz).toString();
 function notice(text){$('message').textContent=text;$('message').hidden=!text;}
@@ -18,7 +18,7 @@ function ensureAudio(){
     const Audio=window.AudioContext||window.webkitAudioContext;
     if(!Audio)throw Error('当前浏览器不支持 Web Audio 音频分析，请使用新版浏览器。');
     context=new Audio();analyser=context.createAnalyser();analyser.fftSize=4096;analyser.smoothingTimeConstant=.12;
-    bins=new Float32Array(analyser.frequencyBinCount);wave=new Float32Array(analyser.fftSize);bands=createBands(context.sampleRate,analyser.fftSize);
+    bins=new Float32Array(analyser.frequencyBinCount);wave=new Float32Array(analyser.fftSize);bands=createBands(context.sampleRate,analyser.fftSize,COUNT);
     source=context.createMediaElementSource(audio);source.connect(analyser);analyser.connect(context.destination);
     context.addEventListener('statechange',updateStatus);renderBands();
   }
@@ -44,13 +44,14 @@ function renderBands(){
 }
 function syncView(){
   if(!renderer)return;$('zoom-label').value=Math.round(renderer.zoom*100)+'%';
+  for(const mode of ['side','top'])$('view-'+mode).setAttribute('aria-pressed',String(renderer.viewMode===mode));
+  canvas.dataset.view=renderer.viewMode;
   bandButtons.forEach((button,index)=>button.setAttribute('aria-pressed',String(index===selected)));
 }
 function syncSettings(){
   for(const key of Object.keys(defaults)){
     $(key).value=settings[key];$(key+'-value').value=key==='gain'?settings[key].toFixed(1)+'×':settings[key]+'%';
   }
-  document.querySelector('.intro-data>div:nth-child(2) strong').innerHTML=settings.rest+'<span>%</span>';
 }
 for(const key of Object.keys(defaults))$(key).addEventListener('input',event=>{settings[key]=Number(event.target.value);syncSettings();});
 $('reset-settings').addEventListener('click',()=>{Object.assign(settings,defaults);syncSettings();});
@@ -82,6 +83,7 @@ $('zoom-in').addEventListener('click',()=>{renderer?.setZoom(renderer.zoom*1.3);
 $('zoom-out').addEventListener('click',()=>{renderer?.setZoom(renderer.zoom/1.3);syncView();});
 $('reset-view').addEventListener('click',()=>{renderer?.reset();selected=-1;syncView();});
 $('detail-view').addEventListener('click',()=>{renderer?.detail();selected=-1;syncView();});
+for(const mode of ['side','top'])$('view-'+mode).addEventListener('click',()=>{if(!renderer)return;renderer.setView(mode);selected=-1;const url=new URL(location.href);url.searchParams.set('view',mode);history.replaceState(null,'',url);syncView();});
 canvas.addEventListener('pointerdown',event=>{if(!renderer)return;drag={x:event.clientX,y:event.clientY,id:event.pointerId};canvas.setPointerCapture(event.pointerId);});
 canvas.addEventListener('pointermove',event=>{if(!drag||drag.id!==event.pointerId)return;renderer.pan(event.clientX-drag.x,event.clientY-drag.y);drag.x=event.clientX;drag.y=event.clientY;});
 for(const event of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(event,()=>drag=null);
@@ -105,7 +107,7 @@ function frame(now){
     for(let i=0;i<COUNT;i++){
       const button=bandButtons[i],value=Math.round(energy[i]*100),delta=strokes[i]-rest;
       button.style.setProperty('--level',energy[i].toFixed(4));button.querySelector('[role=meter]').setAttribute('aria-valuenow',value);
-      const arrow=button.querySelector('.band-direction');arrow.textContent=Math.abs(delta)<.002?'·':delta>0?'↙':'↗';arrow.setAttribute('aria-label',Math.abs(delta)<.002?'中位':delta>0?'铁傀儡伸出':'铁傀儡收回');arrow.title='铁傀儡行程 '+Math.round(strokes[i]*100)+'%';
+      const arrow=button.querySelector('.band-direction');arrow.textContent=Math.abs(delta)<.002?'·':delta>0?'↑':'↓';arrow.setAttribute('aria-label',Math.abs(delta)<.002?'中位':delta>0?'躯干上升':'躯干下降');arrow.title='躯干升降行程 '+Math.round(strokes[i]*100)+'%';
       if(energy[i]>peak){peak=energy[i];peakIndex=i;}
     }
     $('peak-reading').textContent=peak>.005?'主频段 '+frequencyLabel(bands[peakIndex].low)+'–'+frequencyLabel(bands[peakIndex].high)+' Hz':'峰值 —';
@@ -114,7 +116,7 @@ function frame(now){
 }
 renderBands();syncSettings();requestAnimationFrame(frame);
 try{
-  renderer=createSceneRenderer(canvas,$('labels'),await loadTextures(),{forceCpu:new URLSearchParams(location.search).get('renderer')==='cpu'});canvas.dataset.machines=COUNT;canvas.dataset.renderer=renderer.backend;canvas.dataset.projection='perspective';syncView();updateStatus();startAudio();
+  renderer=createSceneRenderer(canvas,$('labels'),await loadTextures(),{forceCpu:new URLSearchParams(location.search).get('renderer')==='cpu'});canvas.dataset.machines=COUNT;canvas.dataset.renderer=renderer.backend;canvas.dataset.projection='orthographic';canvas.dataset.orientation='lying';if(new URLSearchParams(location.search).get('view')==='top')renderer.setView('top');syncView();updateStatus();startAudio();
 }catch(error){$('scene-error').hidden=false;$('scene-error').textContent='开凿机加载失败：'+error.message;$('status').textContent='可视化暂不可用';}
 window.addEventListener('pagehide',()=>{audio.pause();context?.suspend();});
 window.addEventListener('pageshow',event=>{if(event.persisted)updateStatus();});

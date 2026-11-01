@@ -17,3 +17,8 @@ footer{display:flex;justify-content:space-between;align-items:center;gap:20px;bo
 @media(max-width:650px){.live-reading>span{font-size:11px}.live-reading strong{font-size:20px}.view-controls button{padding-left:5px;padding-right:5px}}
 .stage-grid{background-image:none}
 @media(max-width:650px){.stage{height:400px}.intro-sub{max-width:290px}.eyebrow{letter-spacing:.03em;font-size:8px}}
+.scene-top{height:auto;min-height:64px;padding-top:10px;padding-bottom:10px;flex-wrap:wrap;gap:10px}.scene-title{flex:1}.view-controls{margin-left:auto}
+.camera-tabs{display:flex;padding:3px;gap:3px;border:1px solid #3e4d56;border-radius:7px}.camera-tabs button{padding:5px 12px;border-radius:4px;font-size:11px;color:#93a4ab}.camera-tabs button[aria-pressed=true]{background:#34414a;color:#f2bd76}.camera-tabs button:hover{color:#f2bd76}
+.spectrum{grid-template-columns:repeat(8,minmax(0,1fr));gap:9px}.band:nth-child(n+4) .band-fill{background:linear-gradient(0deg,#8c926c,#d1dc9c)}.band:nth-child(n+7) .band-fill{background:linear-gradient(0deg,#577a7a,#a0c1b9)}
+.stage{height:clamp(430px,38vw,580px)}
+@media(max-width:650px){.scene-top{padding:10px 12px}.scene-title{flex:1 1 100px}.camera-tabs button{padding:5px 9px;font-size:10px}.view-controls{margin-left:auto}.stage{height:620px;max-height:75svh;min-height:480px}.spectrum{gap:5px}.band-meta{font-size:9px}.site-header nav{gap:12px;font-size:10px}.brand{font-size:14px}}
