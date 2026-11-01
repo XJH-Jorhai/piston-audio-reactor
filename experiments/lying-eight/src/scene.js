@@ -157,7 +157,7 @@ export function createSceneRenderer(canvas,labelCanvas,images,{forceCpu=false,co
     orbit(dx,dy){const before=camera.project(view.pivot);camera=createCamera('free',{count,angles:orbitAngles(camera.angles,dx,dy),target:view.pivot});const after=camera.project(view.pivot);view.centerX+=after[0]-before[0];view.centerY+=after[1]-before[1];view.mode='free';revision++;},
     setZoom(value){view.zoom=clamp(value,.65,12);revision++;},
     pan(dx,dy){view.panX+=dx;view.panY+=dy;revision++;},
-    reset(){view.zoom=1;view.panX=view.panY=0;const framed=framePoints(camera,points,view.width,view.height);view.centerX=framed.centerX;view.centerY=framed.centerY;view.pivot=arrayCenter(count);view.focused=false;revision++;},
+    reset(){view.zoom=1;view.panX=view.panY=0;const framed=framePoints(camera,points,view.width,view.height);view.scale=framed.scale;view.centerX=framed.centerX;view.centerY=framed.centerY;view.pivot=arrayCenter(count);view.focused=false;revision++;},
     detail(){this.focus(3);},
     focus(index){const framed=framePoints(camera,[0,1].flatMap(q=>machineCorners(q,index,count)),view.width,view.height);view.zoom=clamp(framed.scale*.83/view.scale,.65,12);view.panX=view.panY=0;view.centerX=framed.centerX;view.centerY=framed.centerY;view.pivot=[.5,.5,index*PITCH-1.5];view.focused=true;revision++;},
     dispose(){observer.disconnect();backend.dispose();}
