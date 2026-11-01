@@ -12,8 +12,8 @@ test('adjustable counts repartition the same frequency range into matching machi
     for(let i=1;i<count;i++){assert.ok(bands[i].low>bands[i-1].low);assert.ok(Math.abs(bands[i].low-bands[i-1].high)<1e-8);}
   }
 });
-test('high loudness extends the standing body from the 32 pose and retracts both arms',()=>{
-  const sideRest=restFromPhase(.32);
+test('high loudness extends the standing body from the 38 pose and retracts both arms',()=>{
+  const sideRest=restFromPhase(.38);
   const get=(level,id)=>machineParts(strokeFromLoudness(level)).find(p=>p.id===id).z;
   assert.ok(get(.85,'body-iron')>get(.2,'body-iron'));assert.ok(get(.85,'left-iron')<get(.2,'left-iron'));assert.ok(get(.85,'right-iron')<get(.2,'right-iron'));
   assert.equal(get(0,'body-iron'),1-sideRest);assert.ok(Math.abs(get(0,'left-iron')-sideRest)<1e-12);

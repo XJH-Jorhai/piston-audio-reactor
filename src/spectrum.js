@@ -64,9 +64,9 @@ export function restFromPhase(phase01=.38){
   return clamp(cubic(a.v,a.out.v,b.in.v,b.v,(low+high)/2));
 }
 
-export const DEFAULT_MAPPING=Object.freeze({lowPhase:32,highPhase:0,response:1});
+export const DEFAULT_MAPPING=Object.freeze({lowPhase:38,highPhase:0,response:1});
 export function normalizeMapping(value={}){
-  return {lowPhase:clamp(finite(value?.lowPhase,32),0,50),highPhase:clamp(finite(value?.highPhase,0),0,50),response:clamp(finite(value?.response,1),.25,4)};
+  return {lowPhase:clamp(finite(value?.lowPhase,DEFAULT_MAPPING.lowPhase),0,50),highPhase:clamp(finite(value?.highPhase,0),0,50),response:clamp(finite(value?.response,1),.25,4)};
 }
 /** Generator progress specifies endpoint poses. Interpolate their physical
  * extensions directly, so the generator's timing plateaus don't clip loudness. */

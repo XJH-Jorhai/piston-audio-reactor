@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.0-linear.3 — experiment/linear-modern
+
+- Set the linear low-level/rest pose and reset action to generator progress 38%.
+- Migrate existing linear browser settings once, preserving the high-level endpoint and response curve.
+
 ## 0.2.0-linear.2 — experiment/linear-modern
 
 - Use the two user-recorded standing cameras 默认视角 and 开凿者 as channel-independent shortcuts.
