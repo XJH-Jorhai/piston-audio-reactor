@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0-lying-eight.10 — continuous mode switching
+
+- Keep one media element and Web Audio graph while switching linear, lying and corridor renderers in the current tab.
+- Preserve playback position, pause state, local tracks and transport settings, with History API back/forward navigation.
+- Abort the outgoing view's event handlers/animation loop and retain each layout's camera and response state in this session.
+
 ## 0.3.0-lying-eight.9 — experiment/lying-eight
 
 - Unify page/browser title as 让声谱，推动开凿。 and remove the descriptive subtitle.
