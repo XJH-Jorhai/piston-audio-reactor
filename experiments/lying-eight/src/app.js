@@ -2,7 +2,8 @@ import {createBands,measureBands,smoothLevels,smoothStrokes,restFromPhase,stroke
 import {COUNT,createSceneRenderer,loadTextures} from './scene.js';
 const $=id=>document.getElementById(id),audio=$('audio'),canvas=$('reactor');
 const defaults={gain:1.4,smooth:55,rest:38},settings={...defaults};
-let renderer,context,analyser,source,wave,bands=createBands(48000,4096,COUNT),bins,objectUrl,autoPending=true,drag,previousTime=0,lastMeters=0;
+let renderer,context,analyser,source,wave,bands=createBands(48000,4096,COUNT),bins,objectUrl,autoPending=true,panMode=false,previousTime=0,lastMeters=0;
+const pointers=new Map();
 let energy=new Float32Array(COUNT),strokes=new Float32Array(COUNT).fill(1-restFromPhase(.38)),selected=-1;
 const EMPTY=new Float32Array(COUNT),bandButtons=[],frequencyLabel=hz=>hz>=1000?(hz/1000).toFixed(hz>=10000?0:1).replace(/\.0$/,'')+'k':Math.round(hz).toString();
 function notice(text){$('message').textContent=text;$('message').hidden=!text;}
@@ -44,8 +45,10 @@ function renderBands(){
 }
 function syncView(){
   if(!renderer)return;$('zoom-label').value=Math.round(renderer.zoom*100)+'%';
-  for(const mode of ['side','top'])$('view-'+mode).setAttribute('aria-pressed',String(renderer.viewMode===mode));
+  for(const mode of ['side','top','free'])$('view-'+mode).setAttribute('aria-pressed',String(renderer.viewMode===mode));
   canvas.dataset.view=renderer.viewMode;
+  canvas.dataset.yaw=renderer.angles.yaw.toFixed(4);canvas.dataset.elevation=renderer.angles.elevation.toFixed(4);
+  $('view-free').title='方位 '+Math.round(renderer.angles.yaw*180/Math.PI)+'° · 俯角 '+Math.round(renderer.angles.elevation*180/Math.PI)+'°';
   bandButtons.forEach((button,index)=>button.setAttribute('aria-pressed',String(index===selected)));
 }
 function syncSettings(){
@@ -83,12 +86,31 @@ $('zoom-in').addEventListener('click',()=>{renderer?.setZoom(renderer.zoom*1.3);
 $('zoom-out').addEventListener('click',()=>{renderer?.setZoom(renderer.zoom/1.3);syncView();});
 $('reset-view').addEventListener('click',()=>{renderer?.reset();selected=-1;syncView();});
 $('detail-view').addEventListener('click',()=>{renderer?.detail();selected=-1;syncView();});
-for(const mode of ['side','top'])$('view-'+mode).addEventListener('click',()=>{if(!renderer)return;renderer.setView(mode);selected=-1;const url=new URL(location.href);url.searchParams.set('view',mode);history.replaceState(null,'',url);syncView();});
-canvas.addEventListener('pointerdown',event=>{if(!renderer)return;drag={x:event.clientX,y:event.clientY,id:event.pointerId};canvas.setPointerCapture(event.pointerId);});
-canvas.addEventListener('pointermove',event=>{if(!drag||drag.id!==event.pointerId)return;renderer.pan(event.clientX-drag.x,event.clientY-drag.y);drag.x=event.clientX;drag.y=event.clientY;});
-for(const event of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(event,()=>drag=null);
+for(const mode of ['side','top','free'])$('view-'+mode).addEventListener('click',()=>{if(!renderer)return;renderer.setView(mode);if(mode!=='free'){selected=-1;const url=new URL(location.href);url.searchParams.set('view',mode);history.replaceState(null,'',url);}syncView();});
+$('pan-mode').addEventListener('click',()=>{panMode=!panMode;$('pan-mode').setAttribute('aria-pressed',String(panMode));canvas.dataset.tool=panMode?'pan':'orbit';});
+canvas.addEventListener('pointerdown',event=>{if(!renderer||event.button>2)return;event.preventDefault();canvas.focus({preventScroll:true});pointers.set(event.pointerId,{x:event.clientX,y:event.clientY,pan:event.button!==0||event.shiftKey||panMode});canvas.setPointerCapture(event.pointerId);});
+canvas.addEventListener('pointermove',event=>{
+  const previous=pointers.get(event.pointerId);if(!previous||!renderer)return;
+  const next={...previous,x:event.clientX,y:event.clientY},other=[...pointers.entries()].find(([id])=>id!==event.pointerId)?.[1];
+  if(other){
+    const before=Math.hypot(previous.x-other.x,previous.y-other.y),after=Math.hypot(next.x-other.x,next.y-other.y);
+    if(before>2&&after>2)renderer.setZoom(renderer.zoom*after/before);
+    renderer.pan((next.x-previous.x)/2,(next.y-previous.y)/2);
+  }else if(previous.pan||event.shiftKey)renderer.pan(next.x-previous.x,next.y-previous.y);
+  else renderer.orbit(next.x-previous.x,next.y-previous.y);
+  pointers.set(event.pointerId,next);syncView();
+});
+for(const event of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(event,event=>pointers.delete(event.pointerId));
+canvas.addEventListener('contextmenu',event=>event.preventDefault());
+canvas.addEventListener('dblclick',()=>{renderer?.reset();selected=-1;syncView();});
+canvas.addEventListener('keydown',event=>{
+  if(!renderer)return;const direction={ArrowLeft:[-12,0],ArrowRight:[12,0],ArrowUp:[0,-12],ArrowDown:[0,12]}[event.key];
+  if(direction){event.preventDefault();if(event.shiftKey||panMode)renderer.pan(...direction);else renderer.orbit(...direction);}
+  else if(['+','=','-','Home'].includes(event.key)){event.preventDefault();if(event.key==='Home'){renderer.reset();selected=-1;}else renderer.setZoom(renderer.zoom*(event.key==='-'?1/1.15:1.15));}else return;
+  syncView();
+});
 canvas.addEventListener('wheel',event=>{if(!renderer)return;event.preventDefault();renderer.setZoom(renderer.zoom*Math.exp(-event.deltaY*.001));syncView();},{passive:false});
-$('fullscreen').addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $('visualizer').requestFullscreen();}catch{notice('此浏览器无法进入全屏，你仍可以缩放和平移阵列。');}});
+$('fullscreen').addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $('visualizer').requestFullscreen();}catch{notice('此浏览器无法进入全屏，你仍可以旋转、缩放和平移阵列。');}});
 document.addEventListener('fullscreenchange',()=>{$('fullscreen').textContent=document.fullscreenElement?'退出 ↙':'全屏 ↗';});
 canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();$('scene-error').hidden=false;$('scene-error').textContent='3D 绘图已中断，请刷新页面恢复。';});
 function frame(now){
