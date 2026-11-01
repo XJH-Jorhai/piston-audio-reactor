@@ -29,7 +29,9 @@ export function validateViewRecord(value){
   const count=validateCount(value?.count),settings=value.settings;
   const selected=value.selected===null?null:number(value.selected,0,count-1);
   if(selected!==null&&!Number.isInteger(selected))fail('频段选择格式错误。');
+  const layout=value.layout??'lying';if(!['lying','linear'].includes(layout))fail('不支持这个阵列类型。');
   return {
+    layout,
     id:text(value.id,128),name:text(value.name,80),createdAt:text(value.createdAt,64),count,selected,
     camera:validateCameraState(value.camera),
     settings:{gain:number(settings?.gain,.3,3),smooth:number(settings?.smooth,0,95),lowPhase:number(settings?.lowPhase,0,50),highPhase:number(settings?.highPhase,0,50),response:number(settings?.response,.25,4)}

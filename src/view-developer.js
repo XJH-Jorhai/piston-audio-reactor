@@ -1,7 +1,8 @@
 import {MAX_VIEWS,parseViewCollection,serializeViewCollection,validateViewRecord} from './view-presets.js';
+import {LAYOUT} from './layout.js';
 
 export function mountViewDeveloper({capture,restore}){
-  const $=id=>document.getElementById(id),key='piston-lying-camera-views-v1';
+  const $=id=>document.getElementById(id),key='piston-'+LAYOUT+'-camera-views-v1';
   let records=[],ready=false;
   const status=message=>$('view-status').textContent=message;
   try{const saved=localStorage.getItem(key);if(saved)records=parseViewCollection(saved);}catch{status('未能读取本地视角记录，可重新导入 JSON。');}

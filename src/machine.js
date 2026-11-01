@@ -1,10 +1,12 @@
 /** Rigidly rotated original machines, repeated along the head-to-foot axis. */
-export const COUNT=8,MIN_COUNT=4,MAX_COUNT=64,PITCH=3.5;
+import {DEFAULT_COUNT,STATION_PITCH,IS_LYING,placePoint,centerForCount} from './layout.js';
+export const COUNT=DEFAULT_COUNT,MIN_COUNT=4,MAX_COUNT=64,PITCH=STATION_PITCH;
 export function validateCount(count){
   if(!Number.isInteger(count)||count<MIN_COUNT||count>MAX_COUNT)throw new RangeError('Channel count must be an integer from 4 to 64.');
   return count;
 }
-export const arrayCenter=count=>[.5,.5,((validateCount(count)-1)*PITCH-3)/2];
+export const arrayCenter=count=>centerForCount(validateCount(count));
+export {placePoint} from './layout.js';
 
 /** -90 degrees about X: the original +Z piston travel becomes upward +Y. */
 export function layPoint([x,y,z],offset=0){
@@ -18,7 +20,7 @@ export function machineParts(q,offset=0){
   const parts=[];
   function box(id,x,y,z,w,h,d,material){
     const source={id,x,y,z,w,h,d,material};
-    parts.push({id,x,y:z,z:offset-y-h,w,h:d,d:h,material,source,station:offset});
+    parts.push(IS_LYING?{id,x,y:z,z:offset-y-h,w,h:d,d:h,material,source,station:offset}:{id,x:x+offset,y,z,w,h,d,material,source,station:offset});
   }
   for(const [name,x,extension] of [['left',-1,1-q],['body',0,q],['right',1,1-q]]){
     box(name+'-base',x,1,-1,1,1,.75,'piston');

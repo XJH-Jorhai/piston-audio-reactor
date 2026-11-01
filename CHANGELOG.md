@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0-lying-eight.8 — experiment/lying-eight
+
+- Promote six user-recorded cameras into camera-only shortcuts, independent of channel count and response parameters.
+- Reanchor shortcuts to the current array or focused station; keep the selected camera when changing channel count.
+- Hide the lying developer panel while retaining loudness mapping.
+- Introduce shared layout profiles so the standing linear route can use the same renderer and controls.
+
 ## 0.3.0-lying-eight.7 — experiment/lying-eight
 
 - Collapsible developer camera library: name/capture multiple views, restore, remove, export one/all and import versioned JSON.

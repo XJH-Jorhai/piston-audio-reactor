@@ -28,6 +28,7 @@
           <button id="pan-mode" type="button" aria-pressed="false" title="开启后拖动平移；关闭后拖动旋转">平移</button><button id="reset-view" type="button">适配</button><button id="detail-view" type="button">单台</button><button id="fullscreen" type="button" aria-label="切换全屏">全屏 ↗</button>
         </div>
       </div>
+      <div class="camera-shortcuts" id="camera-shortcuts" hidden><span>记录视角</span><div id="shortcut-buttons" role="group" aria-label="记录好的视角"></div><small>只切换视角，路数与映射独立</small></div>
       <div class="stage" id="stage">
         <div class="stage-grid" aria-hidden="true"></div>
         <canvas id="reactor" role="img" tabindex="0" aria-describedby="camera-help" aria-label="8 台横卧开凿机组成三条平行轨道；中央躯干升降，两侧手臂反向联动。方向键旋转，Shift 加方向键平移，Home 适配。"></canvas>
@@ -60,7 +61,7 @@
       <div class="mapping-help"><p>姿态沿用生成器进度：0% 为躯干全伸出，50% 为全收回。曲线小于 1 时，弱信号动作更明显。</p><span id="mapping-storage">自动保存在此浏览器</span></div>
     </section>
     <div class="below-controls"><p>静音停在低电平姿态，电平升高时向高电平姿态移动。</p><button id="reset-settings" type="button">恢复响应默认值 ⤾</button></div>
-    <details id="developer-tools" class="developer-panel">
+    <details id="developer-tools" class="developer-panel" hidden>
       <summary>开发者 · 视角记录 <span id="view-record-count">0 个</span></summary>
       <div class="developer-content">
         <p>记录角度、缩放、平移、画幅、路数和当前响应参数。载入时恢复完整构图；不同画幅会等比缩放。</p>

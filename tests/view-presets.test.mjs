@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {validateCameraState,validateViewRecord,serializeViewCollection,parseViewCollection,adaptCameraFraming} from '../src/view-presets.js';
 import {createCamera} from '../src/camera.js';
 
-const sample=()=>({id:'test-camera',name:'低角度长阵列',createdAt:'2026-11-02T08:00:00.000Z',count:64,selected:7,
+const sample=()=>({layout:'lying',id:'test-camera',name:'低角度长阵列',createdAt:'2026-11-02T08:00:00.000Z',count:64,selected:7,
   camera:{projection:'orthographic',angleUnit:'radians',angles:{yaw:1.64,elevation:.3,roll:.15},target:[.5,.5,108.75],pivot:[.5,.5,23],center:[-1.3,2.7],pan:[72,-34],viewport:{width:1200,height:500},scale:35,zoom:2.46,focused:true},
   settings:{gain:1.4,smooth:55,lowPhase:38,highPhase:0,response:1}});
 
