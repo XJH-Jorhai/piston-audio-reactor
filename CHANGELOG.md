@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0-corridor.2 — continuous mode switching
+
+- Keep one media element and Web Audio graph while switching linear, lying and corridor renderers in the current tab.
+- Preserve playback position, pause state, local tracks and transport settings, with History API back/forward navigation.
+- Abort the outgoing view's event handlers/animation loop and retain each layout's camera and response state in this session.
+- Add the user-recorded 播放器视角 as a camera-only shortcut, independent of channels and mapping.
+
 ## 0.3.0-corridor.1 — experiment/perspective-corridor
 
 - Sync 4–64 bands, free orbit/pan/zoom, editable loudness endpoints and response curvature from the modern linear route.

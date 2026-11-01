@@ -1,7 +1,7 @@
 import {validateCameraState} from './view-presets.js';
 import {validateCount,arrayCenter,PITCH} from './machine.js';
 import {IS_LYING,centerForStation} from './layout.js';
-import {RECORDED_VIEWS} from './recorded-views.js';
+import {RECORDED_VIEWS} from './recorded-views.js?v=0.3.0-corridor.2';
 
 export const CAMERA_SHORTCUTS=RECORDED_VIEWS;
 /** Keep captured magnification and pose, but reanchor to the current array. */

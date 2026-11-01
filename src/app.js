@@ -4,36 +4,39 @@ import {validateCount} from './machine.js';
 import {mountViewDeveloper} from './view-developer.js';
 import {LAYOUT,IS_LYING,SHOW_DEVELOPER,sceneDescription} from './layout.js';
 import {CAMERA_SHORTCUTS,shortcutCamera} from './camera-shortcuts.js';
-const $=id=>document.getElementById(id),audio=$('audio'),canvas=$('reactor');
+export const preload=loadTextures;
+
+export async function mountReactor({session,textures,autostart=true,resumeState}={}){
+const lifetime=new AbortController(),signal=lifetime.signal;
+const on=(target,type,callback,options={})=>target.addEventListener(type,callback,{...(typeof options==='boolean'?{capture:options}:options),signal});
+let animationFrame;const schedule=()=>{animationFrame=requestAnimationFrame(frame);};
+const $=id=>document.getElementById(id),audio=session.audio,canvas=$('reactor');
 const defaults={gain:1.4,smooth:55,...DEFAULT_MAPPING},settings={...defaults},mappingKey='piston-'+LAYOUT+'-loudness-mapping-v1';
 let activeShortcut=null;const shortcutButtons=[];
 let storageAvailable=true;
 try{const saved=localStorage.getItem(mappingKey);if(saved!==null)Object.assign(settings,normalizeMapping(JSON.parse(saved)));}catch{storageAvailable=false;}
 let mapStroke=createStrokeMapper(settings);
 let count=COUNT;try{const requested=new URLSearchParams(location.search).get('count');if(requested!==null)count=validateCount(Number(requested));}catch{}
-let renderer,context,analyser,source,wave,bands=createBands(48000,4096,count),bins,objectUrl,autoPending=true,panMode=false,previousTime=0,lastMeters=0;
+let renderer,context,analyser,wave,bands=createBands(48000,4096,count),bins,autoPending=autostart,panMode=false,previousTime=0,lastMeters=0;
 const pointers=new Map();
 let energy=new Float32Array(count),strokes=new Float32Array(count).fill(mapStroke(0)),selected=-1,EMPTY=new Float32Array(count);
 const bandButtons=[],frequencyLabel=hz=>hz>=1000?(hz/1000).toFixed(hz>=10000?0:1).replace(/\.0$/,'')+'k':Math.round(hz).toString();
-function notice(text){$('message').textContent=text;$('message').hidden=!text;}
+function notice(text){if(signal.aborted)return;$('message').textContent=text;$('message').hidden=!text;}
 function updateStatus(){
+  if(signal.aborted)return;
   const active=!audio.paused&&context?.state==='running';
   if(active)autoPending=false;
   $('status').textContent=active?'频谱联动中':audio.error?'音频加载失败':audio.ended?'播放结束':renderer?'声场就绪':'正在加载开凿机…';
   $('live-dot').classList.toggle('active',active);$('start').hidden=active||!renderer;
   $('start').querySelector('strong').textContent=audio.ended?'重新播放':audio.currentTime>0?'继续播放':'启动声场';
 }
-function ensureAudio(){
-  if(!context){
-    const Audio=window.AudioContext||window.webkitAudioContext;
-    if(!Audio)throw Error('当前浏览器不支持 Web Audio 音频分析，请使用新版浏览器。');
-    context=new Audio();analyser=context.createAnalyser();analyser.fftSize=4096;analyser.smoothingTimeConstant=.12;
-    bins=new Float32Array(analyser.frequencyBinCount);wave=new Float32Array(analyser.fftSize);bands=createBands(context.sampleRate,analyser.fftSize,count);
-    source=context.createMediaElementSource(audio);source.connect(analyser);analyser.connect(context.destination);
-    context.addEventListener('statechange',updateStatus);renderBands();
-  }
-  return context.resume();
+function bindAudioGraph(){
+  if(context)return;
+  const graph=session.graph();context=graph.context;analyser=graph.analyser;
+  bins=new Float32Array(analyser.frequencyBinCount);wave=new Float32Array(analyser.fftSize);bands=createBands(context.sampleRate,analyser.fftSize,count);
+  on(context,'statechange',updateStatus);renderBands();
 }
+function ensureAudio(){bindAudioGraph();return context.resume();}
 async function startAudio(){
   try{
     notice('');const ready=ensureAudio(),play=audio.play();await Promise.all([ready,play]);autoPending=false;updateStatus();
@@ -50,24 +53,24 @@ function renderBands(){
     button.title='查看第 '+(index+1)+' 台 · '+Math.round(band.low)+'–'+Math.round(band.high)+' Hz';
     button.setAttribute('aria-label',button.title);
     button.innerHTML='<div class="band-meter" role="meter" aria-label="频段 '+(index+1)+' 幅度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="band-fill"></div></div><div class="band-meta"><span class="band-frequency">'+frequencyLabel(band.low)+'</span><span class="band-direction" aria-label="中位">·</span></div>';
-    button.addEventListener('click',()=>{if(!renderer)return;selected=index;renderer.focus(index);syncView(true);});root.append(button);bandButtons.push(button);
+    on(button,'click',()=>{if(!renderer)return;selected=index;renderer.focus(index);syncView(true);});root.append(button);bandButtons.push(button);
   });
 }
 function syncCount(){
   $('channel-count').value=count;$('channel-count-value').value=count+' 路';$('machine-count-value').textContent=count;
   $('array-label').textContent='PERSPECTIVE CORRIDOR';
   for(const value of [8,16,32,64])$('count-'+value).setAttribute('aria-pressed',String(count===value));
-  canvas.dataset.machines=count;canvas.setAttribute('aria-label',sceneDescription(count)+'方向键旋转，Shift 加方向键平移，Home 适配。');
+  canvas.dataset.layout=LAYOUT;canvas.dataset.machines=count;canvas.setAttribute('aria-label',sceneDescription(count)+'方向键旋转，Shift 加方向键平移，Home 适配。');
   document.title='让声谱，推动开凿。';
 }
 function changeCount(value){
   const next=validateCount(value);if(next===count)return;
   renderer?.setCount(next);count=next;selected=-1;bands=createBands(context?.sampleRate||48000,4096,count);
   energy=new Float32Array(count);strokes=new Float32Array(count).fill(mapStroke(0));EMPTY=new Float32Array(count);
-  renderBands();syncCount();if(activeShortcut)applyShortcut(activeShortcut,false);else syncView();const url=new URL(location.href);url.searchParams.set('count',count);history.replaceState(null,'',url);
+  renderBands();syncCount();if(activeShortcut)applyShortcut(activeShortcut,false);else syncView();const url=new URL(location.href);url.searchParams.set('count',count);history.replaceState(null,'',url);document.dispatchEvent(new CustomEvent('reactor:countchange',{detail:count}));
 }
-$('channel-count').addEventListener('input',event=>changeCount(Number(event.target.value)));
-for(const value of [8,16,32,64])$('count-'+value).addEventListener('click',()=>changeCount(value));
+on($('channel-count'),'input',event=>changeCount(Number(event.target.value)));
+for(const value of [8,16,32,64])on($('count-'+value),'click',()=>changeCount(value));
 function applyShortcut(id,updateUrl=true){
   if(!renderer)return;const record=CAMERA_SHORTCUTS.find(view=>view.id===id);if(!record)return;
   renderer.restoreCamera(shortcutCamera(record,count));activeShortcut=id;selected=-1;syncView();
@@ -94,46 +97,47 @@ function syncSettings(){
   canvas.dataset.lowExtension=mapStroke(0).toFixed(5);canvas.dataset.highExtension=mapStroke(1).toFixed(5);
 }
 function saveMapping(){try{localStorage.setItem(mappingKey,JSON.stringify(normalizeMapping(settings)));storageAvailable=true;}catch{storageAvailable=false;}}
-for(const key of Object.keys(defaults))$(key).addEventListener('input',event=>{settings[key]=Number(event.target.value);if(key in DEFAULT_MAPPING)saveMapping();syncSettings();});
-$('reset-mapping').addEventListener('click',()=>{Object.assign(settings,DEFAULT_MAPPING);saveMapping();syncSettings();});
-$('reset-settings').addEventListener('click',()=>{Object.assign(settings,defaults);saveMapping();syncSettings();});
+for(const key of Object.keys(defaults))on($(key),'input',event=>{settings[key]=Number(event.target.value);if(key in DEFAULT_MAPPING)saveMapping();syncSettings();});
+on($('reset-mapping'),'click',()=>{Object.assign(settings,DEFAULT_MAPPING);saveMapping();syncSettings();});
+on($('reset-settings'),'click',()=>{Object.assign(settings,defaults);saveMapping();syncSettings();});
 $('developer-tools').hidden=!SHOW_DEVELOPER;
 const developerTools=SHOW_DEVELOPER?mountViewDeveloper({
+  signal,
   capture(){if(!renderer)throw Error('请等待模型加载完成。');return {layout:LAYOUT,count,selected:selected<0?null:selected,camera:renderer.captureCamera(),settings:{...settings}};},
   restore(record){if(record.layout!==LAYOUT)throw Error('请选择此阵列版本的视角记录。');Object.assign(settings,record.settings);saveMapping();syncSettings();changeCount(record.count);renderer.restoreCamera(record.camera);selected=record.selected??-1;syncView(true);}
 }):null;
-$('start').addEventListener('click',startAudio);
-audio.addEventListener('play',()=>{try{ensureAudio().then(updateStatus).catch(()=>{});}catch(error){notice(error.message);}updateStatus();});
-audio.addEventListener('playing',updateStatus);
-for(const event of ['pause','ended','waiting','loadedmetadata','emptied'])audio.addEventListener(event,updateStatus);
-audio.addEventListener('error',()=>{notice('无法读取这个音频，请更换文件后重试。');updateStatus();});
+on($('start'),'click',startAudio);
+on(audio,'play',()=>{try{ensureAudio().then(updateStatus).catch(()=>{});}catch(error){notice(error.message);}updateStatus();});
+on(audio,'playing',updateStatus);
+for(const event of ['pause','ended','waiting','loadedmetadata','emptied'])on(audio,event,updateStatus);
+on(audio,'error',()=>{notice('无法读取这个音频，请更换文件后重试。');updateStatus();});
 // One initial interaction can unlock both the media element and AudioContext.
 function firstInteraction(event){
   if(!autoPending||!event.isTrusted)return;
+  if(event.composedPath().some(node=>node?.dataset?.reactorLayout))return;
   if(event.type==='keydown'&&!['Enter',' '].includes(event.key))return;
   autoPending=false;
   if(event.composedPath().includes(audio)){try{ensureAudio().catch(()=>{});}catch{}return;}
   if(event.composedPath().includes($('start')))return;
   startAudio();
 }
-document.addEventListener('click',firstInteraction,true);document.addEventListener('keydown',firstInteraction,true);
-$('upload').addEventListener('click',()=>$('audio-file').click());
-$('audio-file').addEventListener('change',event=>{
+on(document,'click',firstInteraction,true);on(document,'keydown',firstInteraction,true);
+on($('upload'),'click',()=>$('audio-file').click());
+on($('audio-file'),'change',event=>{
   const file=event.target.files[0];if(!file)return;
   if(!file.type.startsWith('audio/')&&!/\.(mp3|wav|m4a|ogg|flac|aac)$/i.test(file.name)){notice('请选择 MP3、WAV、M4A、OGG 或 FLAC 音频。');event.target.value='';return;}
-  audio.pause();if(objectUrl)URL.revokeObjectURL(objectUrl);
-  objectUrl=URL.createObjectURL(file);audio.src=objectUrl;audio.load();energy.fill(0);
+  session.replaceFile(file);energy.fill(0);
   $('track-title').textContent=file.name;$('track-artist').textContent='本地音频';$('start').querySelector('small').textContent=file.name;
   notice('');startAudio();event.target.value='';
 });
-$('zoom-in').addEventListener('click',()=>{renderer?.setZoom(renderer.zoom*1.3);syncView(true);});
-$('zoom-out').addEventListener('click',()=>{renderer?.setZoom(renderer.zoom/1.3);syncView(true);});
-$('reset-view').addEventListener('click',()=>{renderer?.reset();selected=-1;syncView(true);});
-$('detail-view').addEventListener('click',()=>{renderer?.detail();selected=-1;syncView(true);});
-for(const mode of ['side','top','free'])$('view-'+mode).addEventListener('click',()=>{if(!renderer)return;renderer.setView(mode);if(mode!=='free'){selected=-1;const url=new URL(location.href);url.searchParams.set('view',mode);history.replaceState(null,'',url);}syncView(true);});
-$('pan-mode').addEventListener('click',()=>{panMode=!panMode;$('pan-mode').setAttribute('aria-pressed',String(panMode));canvas.dataset.tool=panMode?'pan':'orbit';});
-canvas.addEventListener('pointerdown',event=>{if(!renderer||event.button>2)return;event.preventDefault();canvas.focus({preventScroll:true});pointers.set(event.pointerId,{x:event.clientX,y:event.clientY,pan:event.button!==0||event.shiftKey||panMode});canvas.setPointerCapture(event.pointerId);});
-canvas.addEventListener('pointermove',event=>{
+on($('zoom-in'),'click',()=>{renderer?.setZoom(renderer.zoom*1.3);syncView(true);});
+on($('zoom-out'),'click',()=>{renderer?.setZoom(renderer.zoom/1.3);syncView(true);});
+on($('reset-view'),'click',()=>{renderer?.reset();selected=-1;syncView(true);});
+on($('detail-view'),'click',()=>{renderer?.detail();selected=-1;syncView(true);});
+for(const mode of ['side','top','free'])on($('view-'+mode),'click',()=>{if(!renderer)return;renderer.setView(mode);if(mode!=='free'){selected=-1;const url=new URL(location.href);url.searchParams.set('view',mode);history.replaceState(null,'',url);}syncView(true);});
+on($('pan-mode'),'click',()=>{panMode=!panMode;$('pan-mode').setAttribute('aria-pressed',String(panMode));canvas.dataset.tool=panMode?'pan':'orbit';});
+on(canvas,'pointerdown',event=>{if(!renderer||event.button>2)return;event.preventDefault();canvas.focus({preventScroll:true});pointers.set(event.pointerId,{x:event.clientX,y:event.clientY,pan:event.button!==0||event.shiftKey||panMode});canvas.setPointerCapture(event.pointerId);});
+on(canvas,'pointermove',event=>{
   const previous=pointers.get(event.pointerId);if(!previous||!renderer)return;
   const next={...previous,x:event.clientX,y:event.clientY},other=[...pointers.entries()].find(([id])=>id!==event.pointerId)?.[1];
   if(other){
@@ -144,19 +148,19 @@ canvas.addEventListener('pointermove',event=>{
   else renderer.orbit(next.x-previous.x,next.y-previous.y);
   pointers.set(event.pointerId,next);syncView(true);
 });
-for(const event of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(event,event=>pointers.delete(event.pointerId));
-canvas.addEventListener('contextmenu',event=>event.preventDefault());
-canvas.addEventListener('dblclick',()=>{renderer?.reset();selected=-1;syncView(true);});
-canvas.addEventListener('keydown',event=>{
+for(const event of ['pointerup','pointercancel','lostpointercapture'])on(canvas,event,event=>pointers.delete(event.pointerId));
+on(canvas,'contextmenu',event=>event.preventDefault());
+on(canvas,'dblclick',()=>{renderer?.reset();selected=-1;syncView(true);});
+on(canvas,'keydown',event=>{
   if(!renderer)return;const direction={ArrowLeft:[-12,0],ArrowRight:[12,0],ArrowUp:[0,-12],ArrowDown:[0,12]}[event.key];
   if(direction){event.preventDefault();if(event.shiftKey||panMode)renderer.pan(...direction);else renderer.orbit(...direction);}
   else if(['+','=','-','Home'].includes(event.key)){event.preventDefault();if(event.key==='Home'){renderer.reset();selected=-1;}else renderer.setZoom(renderer.zoom*(event.key==='-'?1/1.15:1.15));}else return;
   syncView(true);
 });
-canvas.addEventListener('wheel',event=>{if(!renderer)return;event.preventDefault();renderer.setZoom(renderer.zoom*Math.exp(-event.deltaY*.001));syncView(true);},{passive:false});
-$('fullscreen').addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $('visualizer').requestFullscreen();}catch{notice('此浏览器无法进入全屏，你仍可以旋转、缩放和平移阵列。');}});
-document.addEventListener('fullscreenchange',()=>{$('fullscreen').textContent=document.fullscreenElement?'退出 ↙':'全屏 ↗';});
-canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();$('scene-error').hidden=false;$('scene-error').textContent='3D 绘图已中断，请刷新页面恢复。';});
+on(canvas,'wheel',event=>{if(!renderer)return;event.preventDefault();renderer.setZoom(renderer.zoom*Math.exp(-event.deltaY*.001));syncView(true);},{passive:false});
+on($('fullscreen'),'click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $('visualizer').requestFullscreen();}catch{notice('此浏览器无法进入全屏，你仍可以旋转、缩放和平移阵列。');}});
+on(document,'fullscreenchange',()=>{$('fullscreen').textContent=document.fullscreenElement?'退出 ↙':'全屏 ↗';});
+on(canvas,'webglcontextlost',event=>{event.preventDefault();$('scene-error').hidden=false;$('scene-error').textContent='3D 绘图已中断，请刷新页面恢复。';});
 function frame(now){
   const dt=Math.min(.1,Math.max(0,(now-previousTime)/1000||1/60));previousTime=now;
   const playing=!audio.paused&&context?.state==='running';
@@ -179,14 +183,27 @@ function frame(now){
     }
     $('peak-reading').textContent=peak>.005?'主频段 '+frequencyLabel(bands[peakIndex].low)+'–'+frequencyLabel(bands[peakIndex].high)+' Hz':'峰值 —';
   }
-  requestAnimationFrame(frame);
+  schedule();
 }
-if(!IS_LYING){document.querySelector('h1').textContent='让声谱，推动开凿。';document.querySelector('.eyebrow').textContent='PERSPECTIVE CORRIDOR';const nav=document.querySelector('.site-header nav');nav.children[0].href='https://xjh-jorhai.github.io/piston-audio-reactor/experiments/lying-eight/';nav.children[0].textContent='横卧版 ↗';nav.children[1].href='https://xjh-jorhai.github.io/piston-audio-reactor/';nav.children[1].textContent='线性版 ↗';nav.children[2].href='https://github.com/XJH-Jorhai/piston-audio-reactor';document.querySelector('.intro-data>div:nth-child(2)>span').textContent='联动活塞';}
+document.querySelector('h1').textContent='让声谱，推动开凿。';
+document.querySelector('.eyebrow').textContent=LAYOUT==='corridor'?'PERSPECTIVE CORRIDOR':IS_LYING?'THREE LANES / LYING ARRAY':'LINEAR MACHINE ARRAY';
+$('view-side').textContent=LAYOUT==='corridor'?'长廊':'侧俯视';$('view-top').textContent=LAYOUT==='corridor'?'俯视':'正俯视';
+$('pan-mode').setAttribute('aria-pressed','false');canvas.dataset.tool='orbit';
+$('scene-error').hidden=true;$('scene-error').textContent='';notice('');
+$('shortcut-buttons').replaceChildren();
+if(resumeState)Object.assign(settings,resumeState.settings);
 $('camera-shortcuts').hidden=!CAMERA_SHORTCUTS.length;
-for(const record of CAMERA_SHORTCUTS){const button=document.createElement('button');button.type='button';button.textContent=record.name;button.dataset.shortcut=record.id;button.setAttribute('aria-pressed','false');button.disabled=true;button.addEventListener('click',()=>applyShortcut(record.id));$('shortcut-buttons').append(button);shortcutButtons.push(button);}
-renderBands();syncCount();syncSettings();requestAnimationFrame(frame);
+for(const record of CAMERA_SHORTCUTS){const button=document.createElement('button');button.type='button';button.textContent=record.name;button.dataset.shortcut=record.id;button.setAttribute('aria-pressed','false');button.disabled=true;on(button,'click',()=>applyShortcut(record.id));$('shortcut-buttons').append(button);shortcutButtons.push(button);}
+renderBands();syncCount();syncSettings();if(session.hasGraph)bindAudioGraph();schedule();
 try{
-  renderer=createSceneRenderer(canvas,await loadTextures(),{count,forceCpu:new URLSearchParams(location.search).get('renderer')==='cpu'});canvas.dataset.renderer=renderer.backend;canvas.dataset.projection='perspective';canvas.dataset.orientation=IS_LYING?'lying':'standing';if(new URLSearchParams(location.search).get('view')==='top')renderer.setView('top');shortcutButtons.forEach(button=>button.disabled=false);applyShortcut(new URLSearchParams(location.search).get('preset'),false);syncView();developerTools?.setReady();updateStatus();startAudio();
+  renderer=createSceneRenderer(canvas,textures||await loadTextures(),{count,forceCpu:new URLSearchParams(location.search).get('renderer')==='cpu'});canvas.dataset.renderer=renderer.backend;canvas.dataset.projection='perspective';canvas.dataset.orientation=IS_LYING?'lying':'standing';if(new URLSearchParams(location.search).get('view')==='top')renderer.setView('top');shortcutButtons.forEach(button=>button.disabled=false);applyShortcut(new URLSearchParams(location.search).get('preset'),false);if(resumeState?.count===count&&resumeState.camera){renderer.restoreCamera(resumeState.camera);selected=resumeState.selected;activeShortcut=resumeState.activeShortcut;}
+  syncView();developerTools?.setReady();updateStatus();if(autostart)startAudio();
 }catch(error){$('scene-error').hidden=false;$('scene-error').textContent='开凿机加载失败：'+error.message;$('status').textContent='可视化暂不可用';}
-window.addEventListener('pagehide',()=>{audio.pause();context?.suspend();});
-window.addEventListener('pageshow',event=>{if(event.persisted)updateStatus();});
+on(window,'pagehide',()=>{audio.pause();context?.suspend();});
+on(window,'pageshow',event=>{if(event.persisted)updateStatus();});
+
+return {
+  snapshot(){return {count,selected,activeShortcut,settings:{...settings},camera:renderer?.captureCamera()};},
+  dispose(){lifetime.abort();cancelAnimationFrame(animationFrame);pointers.clear();renderer?.dispose();}
+};
+}
