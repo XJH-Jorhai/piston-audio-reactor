@@ -31,6 +31,10 @@ git worktree add --detach ../piston-audio-reactor-v1.0.0 v1.0.0
 
 ## 后续开发
 
+当前在研路线：`feature/music-player`，基于 `v1.0.0`，独立工作目录 `../piston-audio-player`。独立页面源码为 `player/`，预览地址为 `experiments/music-player/`。用户要求的长廊“播放器视角”、封面模糊背景、清晰悬浮封面和歌词/播放控制均在此路线开发；不会覆盖已定格三个入口。当前预览版本为 `v0.1.0-player.1`。
+
+发布播放器时，先在该分支测试、提交、打对应 `player/release.json` 版本标签并推送，再从 main 执行 `node scripts/publish-player.mjs --source ../piston-audio-player`。脚本仅更新播放器独立目录，检查来源提交与标签；预览目录的 `preview.json` 记录来源。
+
 以当前 `main` 或固定标签为起点建立新的短期分支，不重新保留三套长期云端实验分支：
 
 ```sh

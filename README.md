@@ -15,6 +15,8 @@
 
 顶部“线性版 / 横卧版 / 长廊版”直接切换画面。切换会保留音频进度、暂停状态、音量和本地音源，浏览器前进 / 后退同样有效。在线演示跟随 `main`；需要固定源码时，请下载 Release 中的标签归档。
 
+**独立实验：[开凿 · 音乐播放器](https://xjh-jorhai.github.io/piston-audio-reactor/experiments/music-player/)**。以长廊播放器视角为主视觉，加入悬浮封面、模糊背景、自定义播放控制和 LRC 歌词；源码位于 [`feature/music-player`](https://github.com/XJH-Jorhai/piston-audio-reactor/tree/feature/music-player) 分支。它在单独目录预览，原有定格版本保持不变。
+
 ## 功能与操作
 
 - **4–64 路频谱**：可连续调节，也可快捷选择 8 / 16 / 32 / 64 路。频谱覆盖 40 Hz–16 kHz，随路数重新分配对数频段。
