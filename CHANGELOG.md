@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0-linear.4 — continuous mode switching
+
+- Keep one media element and Web Audio graph while switching linear, lying and corridor renderers in the current tab.
+- Preserve playback position, pause state, local tracks and transport settings, with History API back/forward navigation.
+- Abort the outgoing view's event handlers/animation loop and retain each layout's camera and response state in this session.
+
 ## 0.2.0-linear.3 — experiment/linear-modern
 
 - Set the linear low-level/rest pose and reset action to generator progress 38%.

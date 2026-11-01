@@ -3,7 +3,7 @@
 保留原版开凿机的站立造型与 X 轴线性排列，在独立分支中同步横卧版的相机、音频映射与开发者工具。默认 16 路，支持 4–64 路逐路调节和 8/16/32/64 快捷按钮。
 
 - 演示：https://xjh-jorhai.github.io/piston-audio-reactor/
-- 分支：experiment/linear-modern；标签：v0.2.0-linear.3。
+- 分支：experiment/linear-modern；标签：v0.2.0-linear.4。
 - 横卧版：https://xjh-jorhai.github.io/piston-audio-reactor/experiments/lying-eight/
 - 旧线性版：https://xjh-jorhai.github.io/piston-audio-reactor/experiments/linear-legacy/
 - 长廊版：https://xjh-jorhai.github.io/piston-audio-reactor/experiments/perspective-corridor/
@@ -43,3 +43,9 @@ Node.js 20+，无外部运行时依赖：
 标题统一为“让声谱，推动开凿。”，标题下的造型说明已移除。频谱柱宽与间距随路数和容器宽度自适应，4–64 路均完整排列，不使用横向滚动条。
 
 从旧版升级时，首次将低电平端点迁移为 38%，同时保留已有高电平端点与响应曲率；之后用户自行修改的映射仍照常保存。
+
+## 三版连续切换
+
+顶部“线性版 / 横卧版 / 长廊版”在当前标签页内切换。共用同一个 audio 元素、AudioContext、音源节点及分析器，保留进度、暂停、音量、播放速率及本地导入音源；不会重新开始音乐。浏览器前进/后退同样连续播放。每个版本的构图和响应参数在本次页面会话中保留，路数随切换带入。
+
+完整的跨版本本地预览从 main 工作目录运行 npm run dev，三个入口及其 src/bootstrap.js、src/audio-session.js 必须一同部署。各实验分支仍保留独立几何、相机和发布快照；直接进入任一正式入口都可开始同页切换。
