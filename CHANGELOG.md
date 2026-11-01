@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0-lying-eight.4 — experiment/lying-eight
+
+- Fit recomputes the base scale at the current orbit angle, so end-on views correctly fill the available canvas.
+
 ## 0.3.0-lying-eight.3 — experiment/lying-eight
 
 - Adjustable 4–32 spectrum channels with 8/16 shortcuts and count URL parameter.
