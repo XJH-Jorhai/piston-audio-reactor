@@ -3,7 +3,7 @@
 保留原版开凿机的站立造型与 X 轴线性排列，在独立分支中同步横卧版的相机、音频映射与开发者工具。默认 16 路，支持 4–64 路逐路调节和 8/16/32/64 快捷按钮。
 
 - 演示：https://xjh-jorhai.github.io/piston-audio-reactor/
-- 分支：experiment/linear-modern；标签：v0.2.0-linear.4。
+- 分支：experiment/linear-modern；标签：v0.2.0-linear.5。
 - 横卧版：https://xjh-jorhai.github.io/piston-audio-reactor/experiments/lying-eight/
 - 旧线性版：https://xjh-jorhai.github.io/piston-audio-reactor/experiments/linear-legacy/
 - 长廊版：https://xjh-jorhai.github.io/piston-audio-reactor/experiments/perspective-corridor/

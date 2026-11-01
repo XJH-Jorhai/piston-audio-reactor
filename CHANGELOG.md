@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.0-linear.5 — deployment cache compatibility
+
+- Version the mount entry dependencies so previously cached standalone controllers cannot retain old listeners or omit new camera shortcuts.
+
 ## 0.2.0-linear.4 — continuous mode switching
 
 - Keep one media element and Web Audio graph while switching linear, lying and corridor renderers in the current tab.

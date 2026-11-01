@@ -6,7 +6,7 @@
 - 原始线性演示：https://xjh-jorhai.github.io/piston-audio-reactor/experiments/linear-legacy/
 - 基线标签：v0.1.0-linear
 - 基线提交：f04b95726cf4b55d38580165197de485ff66e2c1
-- main 当前为用户要求同步升级的线性版（v0.2.0-linear.4），默认低电平进度 38 → 高电平进度 0；原始 v0.1.0-linear 通过标签与独立预览保留。透视长廊维持独立快照。
+- main 当前为用户要求同步升级的线性版（v0.2.0-linear.5），默认低电平进度 38 → 高电平进度 0；原始 v0.1.0-linear 通过标签与独立预览保留。透视长廊维持独立快照。
 
 ## 实验路线
 
@@ -21,9 +21,9 @@
 
 横卧版的六个用户视角以 ?preset=saved-1 至 saved-6 切换，保持当前路数与映射独立，开发者面板隐藏。线性版沿用相同控制核心，保留站立造型和 X 轴排列，开发者记录/JSON 继续可用，保存空间按版本分开。
 
-透视长廊 v0.3.0-corridor.2 同步 4–64 路、自由旋转/平移/缩放、响应强度和平滑、电平两端姿态与响应曲线，默认 38 → 0。保留原始近大远小长廊构图和轻度远景雾化，增加俯视预设。开发者视角库独立保存透视距离、构图和响应参数，支持 JSON 导入/导出；不能与正交视角记录混用。频谱完整适配容器，标题统一且移除序号和副标题。旧版 v0.2.0-corridor.1 标签继续保留。
+透视长廊 v0.3.0-corridor.3 同步 4–64 路、自由旋转/平移/缩放、响应强度和平滑、电平两端姿态与响应曲线，默认 38 → 0。保留原始近大远小长廊构图和轻度远景雾化，增加俯视预设。开发者视角库独立保存透视距离、构图和响应参数，支持 JSON 导入/导出；不能与正交视角记录混用。频谱完整适配容器，标题统一且移除序号和副标题。旧版 v0.2.0-corridor.1 标签继续保留。
 
-连续切换版本：线性 v0.2.0-linear.4、横卧 v0.3.0-lying-eight.10、长廊 v0.3.0-corridor.2。各入口由 bootstrap 加载对应可挂载应用，顶部三个版本使用 History API 同页切换，保留同一 audio 元素和 Web Audio 图；音频进度、暂停、本地音源不随画面重置。每次卸载停止该视图的 RAF/ResizeObserver 并通过 AbortController 移除事件。三套运行时须一起发布；旧版原始线性快照仍独立。长廊新增用户 JSON 的“播放器视角”（?preset=player-view），只切相机，不改变路数与响应映射。
+连续切换版本：线性 v0.2.0-linear.5、横卧 v0.3.0-lying-eight.11、长廊 v0.3.0-corridor.3。各入口由 bootstrap 加载对应可挂载应用，顶部三个版本使用 History API 同页切换，保留同一 audio 元素和 Web Audio 图；音频进度、暂停、本地音源不随画面重置。每次卸载停止该视图的 RAF/ResizeObserver 并通过 AbortController 移除事件。三套运行时须一起发布；旧版原始线性快照仍独立。长廊新增用户 JSON 的“播放器视角”（?preset=player-view），只切相机，不改变路数与响应映射。
 
 线性升级先在独立分支提交并推送，再从 main 执行 `node scripts/sync-linear.mjs --source ../piston-audio-reactor-linear-modern`。脚本检查源提交、远端和工作区状态，首次同步前归档原始线性页，只复制根站点源码/测试与文档；不覆盖实验快照。linear-release.json 记录根站点来源提交。撤回根站点升级可 revert 对应发布提交。
 
