@@ -1,4 +1,5 @@
 import {COUNT,PITCH,arrayCenter,validateCount} from './machine.js';
+import {IS_LYING} from './layout.js';
 const subtract=(a,b)=>a.map((v,i)=>v-b[i]);
 export const dot=(a,b)=>a.reduce((sum,value,i)=>sum+value*b[i],0);
 const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
@@ -17,7 +18,8 @@ export function layoutYaw(aspect=2.5){
 export function createCamera(mode='side',{aspect=2.5,angles,count=COUNT,target=arrayCenter(count)}={}){
   validateCount(count);
   if(!VIEW_MODES.includes(mode))throw new RangeError('Unknown camera view.');
-  const angle=layoutYaw(aspect),orientation=orbitAngles(angles||{yaw:mode==='top'?0:angle,elevation:52*Math.PI/180,roll:mode==='top'?angle:0},0,0);
+  const angle=layoutYaw(aspect),defaults=IS_LYING?{yaw:mode==='top'?0:angle,elevation:52*Math.PI/180,roll:mode==='top'?angle:0}:{yaw:mode==='top'?-Math.PI/2:-2*Math.PI/3,elevation:30*Math.PI/180,roll:-(angle-12*Math.PI/180)};
+  const orientation=orbitAngles(angles||defaults,0,0);
   const {yaw,elevation,roll}=orientation;
   const forward=[Math.cos(elevation)*Math.cos(yaw),-Math.sin(elevation),Math.cos(elevation)*Math.sin(yaw)];
   let right=[-Math.sin(yaw),0,Math.cos(yaw)],up=unit(cross(right,forward));

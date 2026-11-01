@@ -2,10 +2,11 @@
 
 ## 基线
 
-- 稳定演示：https://xjh-jorhai.github.io/piston-audio-reactor/
+- 当前线性演示：https://xjh-jorhai.github.io/piston-audio-reactor/
+- 原始线性演示：https://xjh-jorhai.github.io/piston-audio-reactor/experiments/linear-legacy/
 - 基线标签：v0.1.0-linear
 - 基线提交：f04b95726cf4b55d38580165197de485ff66e2c1
-- main 保留稳定线性版本，实验不直接合入其渲染器和音频映射。
+- main 当前为用户要求同步升级的线性版（v0.2.0-linear.1），原始 v0.1.0-linear 通过标签与独立预览保留。透视长廊维持独立快照。
 
 ## 实验路线
 
@@ -13,8 +14,14 @@
 | --- | --- | --- | --- |
 | 透视长廊 | experiment/perspective-corridor | ../piston-audio-reactor-corridor | https://xjh-jorhai.github.io/piston-audio-reactor/experiments/perspective-corridor/ |
 | 横卧阵列（4–64 路） | experiment/lying-eight | ../piston-audio-reactor-lying-eight | https://xjh-jorhai.github.io/piston-audio-reactor/experiments/lying-eight/ |
+| 线性版升级（4–64 路） | experiment/linear-modern | ../piston-audio-reactor-linear-modern | https://xjh-jorhai.github.io/piston-audio-reactor/ |
+| 原始线性版 | v0.1.0-linear 标签 | — | https://xjh-jorhai.github.io/piston-audio-reactor/experiments/linear-legacy/ |
 
 横卧路线基于 v0.2.0-corridor.1，默认侧俯视，可切换正俯视（从长边正面斜向看入）或拖动自由旋转；直接链接附加 ?view=top。采用正交投影，机器等大。默认 8 路，支持 4–64 路调节，附加 ?count=64 可打开 64 路；切换路数保留角度、自动适配并重新分配频段。映射默认低电平进度 32 → 高电平进度 0（躯干全伸出），可在页面编辑两端姿态与响应曲线并自动保存在当前浏览器。
+
+横卧版的六个用户视角以 ?preset=saved-1 至 saved-6 切换，保持当前路数与映射独立，开发者面板隐藏。线性版沿用相同控制核心，保留站立造型和 X 轴排列，开发者记录/JSON 继续可用，保存空间按版本分开。
+
+线性升级先在独立分支提交并推送，再从 main 执行 `node scripts/sync-linear.mjs --source ../piston-audio-reactor-linear-modern`。脚本检查源提交、远端和工作区状态，首次同步前归档原始线性页，只复制根站点源码/测试与文档；不覆盖实验快照。linear-release.json 记录根站点来源提交。撤回根站点升级可 revert 对应发布提交。
 
 每条路线使用独立分支、独立 worktree、独立预览路径。先在实验分支提交并验证，再更新 main 中对应的预览快照。
 预览目录中的 preview.json 记录来源分支、完整提交和基线标签。

@@ -1,5 +1,76 @@
 # Changelog
 
+## 0.2.0-linear.1 — experiment/linear-modern
+
+- Upgrade the standing linear route with the shared 4–64 channel controls and six-face depth renderer.
+- Add free orbit, pan, zoom, preset cameras, viewport-aware fit and JSON developer view library.
+- Sync editable loudness endpoints, response curvature, browser persistence and the 32→0 default.
+- Preserve the standing X-axis layout, fixed pumpkin/piston housings, original 3.9-block pitch and forward/backward motion.
+- Separate standing camera records/settings from the lying route; retain v0.1.0-linear as a legacy preview.
+
+## 0.3.0-lying-eight.8 — experiment/lying-eight
+
+- Promote six user-recorded cameras into camera-only shortcuts, independent of channel count and response parameters.
+- Reanchor shortcuts to the current array or focused station; keep the selected camera when changing channel count.
+- Hide the lying developer panel while retaining loudness mapping.
+- Introduce shared layout profiles so the standing linear route can use the same renderer and controls.
+
+## 0.3.0-lying-eight.7 — experiment/lying-eight
+
+- Collapsible developer camera library: name/capture multiple views, restore, remove, export one/all and import versioned JSON.
+- Include complete camera composition, viewport, orbit pivot, channel count and response settings; retain records in browser storage.
+- Proportional composition restore across viewports and stable free-view resizing.
+- Remove rendered channel ordinals, spectrum codes and the numbered corner legend.
+
+## 0.3.0-lying-eight.6 — experiment/lying-eight
+
+- Default silence/low-level pose is generator progress 32; peak loudness maps to progress 0 (fully extended central body).
+- Editable low/high endpoint poses and response curvature, automatically retained in this browser with a reset button.
+- Direct interpolation of physical endpoint extensions avoids generator timing plateaus and the old opposite-direction dip.
+- Increase channel limit to 64 and add a shortcut; grow GPU vertex storage when required.
+
+## 0.3.0-lying-eight.5 — experiment/lying-eight
+
+- Add a 32-channel shortcut beside the 8/16-channel controls.
+
+## 0.3.0-lying-eight.4 — experiment/lying-eight
+
+- Fit recomputes the base scale at the current orbit angle, so end-on views correctly fill the available canvas.
+
+## 0.3.0-lying-eight.3 — experiment/lying-eight
+
+- Adjustable 4–32 spectrum channels with 8/16 shortcuts and count URL parameter.
+- Live FFT repartition and array rebuild preserve camera angles and audio playback, fitting the complete new array.
+- Dynamic floor, labels, frequency meters and proportional low/mid/high colors.
+- Safe camera clipping for long arrays, including end-on free views; scrollable dense meters on narrow displays.
+
+## 0.3.0-lying-eight.2 — experiment/lying-eight
+
+- Free orbit around the array or selected machine with 360-degree azimuth and −89° to 89° elevation.
+- Drag rotation, Shift/right-button drag panning, explicit pan tool, wheel zoom and two-finger pinch/pan.
+- Keyboard camera controls, visible free-camera state and one-click preset restoration.
+- Camera angles survive resizing; orbit preserves zoom, pan and audio playback.
+- Additional camera tests cover all sides, near-pole views, complete turns and invalid input.
+
+## 0.3.0-lying-eight.1 — experiment/lying-eight
+
+- Separate worktree based on v0.2.0-corridor.1; previous routes remain available.
+- Eight machines rigidly rotated 90 degrees into three parallel vertical piston lanes.
+- Equal-size orthographic side-oblique and front-oblique views; the front view looks across the long edge, retaining a 52-degree elevation.
+- Correctly rotated face textures, fixed housings/pumpkins, fully retractable rods, arm shading and height-linked shadows.
+- Eight direct logarithmic loudness bands, original rest posture and Assumptions audio.
+- Responsive full-stroke framing, URL view selection, GPU depth and CPU fallback.
+
+
+## 0.2.0-corridor.1 — experiment/perspective-corridor
+
+- Independent worktree from the v0.1.0-linear baseline.
+- Real perspective corridor camera; foreground machines receive over five times the projected height of the far end.
+- Six-face blocks, continuous floor guides, mild depth haze, and perspective-correct CPU/GPU rendering.
+- Adaptive framing keeps all sixteen machines inside the overview at all stroke values.
+- Original direct loudness mapping, direction, 38% rest posture and music preserved.
+
+
 ## 0.1.0
 
 - Independent project based on the frozen generator v1.2.0.

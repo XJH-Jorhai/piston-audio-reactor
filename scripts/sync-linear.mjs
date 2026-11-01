@@ -1,0 +1,32 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {execFileSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+const root=path.resolve(fileURLToPath(new URL('../',import.meta.url))),args=process.argv.slice(2),index=args.indexOf('--source');
+if(index<0||!args[index+1])throw Error('Use --source <linear worktree>.');
+const source=await fs.realpath(path.resolve(root,args[index+1]));
+const git=(cwd,...values)=>execFileSync('git',values,{cwd,encoding:'utf8'}).trim();
+const common=async cwd=>fs.realpath(path.resolve(cwd,git(cwd,'rev-parse','--git-common-dir')));
+if(source===root||await common(root)!==await common(source))throw Error('Source must be a separate worktree of this repository.');
+if(git(root,'branch','--show-current')!=='main'||git(source,'branch','--show-current')!=='experiment/linear-modern')throw Error('Use main and experiment/linear-modern.');
+if(git(source,'status','--porcelain'))throw Error('Commit the linear source first.');
+const commit=git(source,'rev-parse','HEAD');
+const tag='v'+JSON.parse(await fs.readFile(path.join(source,'package.json'),'utf8')).version;
+if(git(source,'rev-parse',tag+'^{commit}')!==commit)throw Error('The source version tag must point to its current commit.');
+if(git(source,'rev-parse','refs/remotes/origin/experiment/linear-modern')!==commit)throw Error('Push the source branch first.');
+const files=['index.html','README.md','CREDITS.md','CHANGELOG.md','package.json','src','tests'];
+if(git(root,'status','--porcelain','--',...files,'linear-release.json'))throw Error('Root linear files have uncommitted changes.');
+if(!(await fs.readFile(path.join(source,'src/layout.js'),'utf8')).includes("LAYOUT='linear'"))throw Error('Source is not the standing linear layout.');
+const legacy=path.resolve(root,'experiments/linear-legacy');
+if(!legacy.startsWith(path.resolve(root,'experiments')+path.sep))throw Error('Archive must stay in experiments/.');
+const existing=await fs.lstat(legacy).catch(error=>{if(error.code==='ENOENT')return null;throw error;});
+if(existing?.isSymbolicLink())throw Error('Archive cannot be a symlink.');
+if(!existing){
+  git(root,'diff','--exit-code','v0.1.0-linear','--','src','index.html','assets');
+  await fs.mkdir(legacy,{recursive:true});
+  for(const name of ['index.html','README.md','CREDITS.md','.nojekyll','src','assets','licenses'])await fs.cp(path.join(root,name),path.join(legacy,name),{recursive:true});
+  await fs.writeFile(path.join(legacy,'preview.json'),JSON.stringify({branch:'v0.1.0-linear',commit:git(root,'rev-parse','v0.1.0-linear^{commit}'),baseTag:'v0.1.0-linear',url:'https://xjh-jorhai.github.io/piston-audio-reactor/experiments/linear-legacy/'},null,2)+'\n');
+}
+for(const name of files)await fs.cp(path.join(source,name),path.join(root,name),{recursive:true});
+await fs.writeFile(path.join(root,'linear-release.json'),JSON.stringify({branch:'experiment/linear-modern',commit,tag,sourceBase:'v0.3.0-lying-eight.8',legacyTag:'v0.1.0-linear'},null,2)+'\n');
+console.log(JSON.stringify({source,commit,legacy}));
