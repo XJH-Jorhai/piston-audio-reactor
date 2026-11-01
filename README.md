@@ -2,7 +2,7 @@
 
 从透视长廊版本 v0.2.0-corridor.1 分出的独立展示路线。将原版开凿机整体旋转 90° 横卧，沿长轴排列成三条平行升降轨道；保留一格真实活塞行程。路数可在 4–64 之间逐路调节，默认 8 路，提供 8/16/32/64 路快捷切换。
 
-- 分支：experiment/lying-eight；版本：v0.3.0-lying-eight.8。
+- 分支：experiment/lying-eight；版本：v0.3.0-lying-eight.9。
 - 预览：https://xjh-jorhai.github.io/piston-audio-reactor/experiments/lying-eight/
 - 16 路直达：https://xjh-jorhai.github.io/piston-audio-reactor/experiments/lying-eight/?count=16
 - 32 路直达：https://xjh-jorhai.github.io/piston-audio-reactor/experiments/lying-eight/?count=32
@@ -24,7 +24,7 @@
 
 ## 音频映射
 
-FFT 大小 4096，40 Hz–16 kHz 按所选路数分成对应数量的对数频段。每个频段对线性功率求平均，再将 RMS 频谱响度直接映射到机械位置，不使用周期载波、正弦振荡或预制循环。高电平使中央躯干升起，左右铁块反向联动；机械位置平滑抑制抖动。低、中、高频颜色按路数等比例分配，16 路以上频段条改为编号显示，频率范围保留在悬浮提示中；窄屏可横向滚动频谱条。
+FFT 大小 4096，40 Hz–16 kHz 按所选路数分成对应数量的对数频段。每个频段对线性功率求平均，再将 RMS 频谱响度直接映射到机械位置，不使用周期载波、正弦振荡或预制循环。高电平使中央躯干升起，左右铁块反向联动；机械位置平滑抑制抖动。低、中、高频颜色按路数等比例分配，16 路以上频段条改为编号显示，频率范围保留在悬浮提示中；频谱柱宽和间距随路数与容器宽度自适应，窄屏也完整显示全部通道。
 
 默认低电平/静音端点为生成器进度 32%，高电平端点为进度 0%（中央躯干全伸出）。在两端的真实机械位移之间按归一化电平插值，默认线性；不再围绕中位向两侧映射，也不再经过旧的低电平反向收回段。行程始终限制在配置的两端之间，所有活塞仍只移动 0–1 格。输入电平读取时域 RMS 并显示为 dBFS。
 
@@ -65,3 +65,5 @@ Node.js 20+，无外部运行时依赖：
 ## 来源
 
 几何继承独立定版 Piston Letter Studio v1.2.0，渲染基础继承本仓库的透视长廊分支。参考 Andy Wang 的 MIT 项目 reactor-audio-visualizer。Minecraft 原版纹理及音源来源详见 [CREDITS.md](CREDITS.md)。旧路线保持独立，不用本分支覆盖。
+
+两版页面标题统一为“让声谱，推动开凿。”，标题下的造型说明已移除。

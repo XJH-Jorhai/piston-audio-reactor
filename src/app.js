@@ -2,7 +2,7 @@ import {createBands,measureBands,smoothLevels,smoothStrokes,createStrokeMapper,D
 import {COUNT,createSceneRenderer,loadTextures} from './scene.js';
 import {validateCount} from './machine.js';
 import {mountViewDeveloper} from './view-developer.js';
-import {LAYOUT,IS_LYING,SHOW_DEVELOPER,introDescription,sceneDescription} from './layout.js';
+import {LAYOUT,IS_LYING,SHOW_DEVELOPER,sceneDescription} from './layout.js';
 import {CAMERA_SHORTCUTS,shortcutCamera} from './camera-shortcuts.js';
 const $=id=>document.getElementById(id),audio=$('audio'),canvas=$('reactor');
 const defaults={gain:1.4,smooth:55,...DEFAULT_MAPPING},settings={...defaults},mappingKey='piston-'+LAYOUT+'-loudness-mapping-v1';
@@ -55,11 +55,10 @@ function renderBands(){
 }
 function syncCount(){
   $('channel-count').value=count;$('channel-count-value').value=count+' 路';$('machine-count-value').textContent=count;
-  $('intro-description').textContent=introDescription(count);
   $('array-label').textContent=IS_LYING?'THREE LANES':'LINEAR ARRAY';
   for(const value of [8,16,32,64])$('count-'+value).setAttribute('aria-pressed',String(count===value));
   canvas.dataset.machines=count;canvas.setAttribute('aria-label',sceneDescription(count)+'方向键旋转，Shift 加方向键平移，Home 适配。');
-  document.title=count+(IS_LYING?' 路横卧试验':' 路线性阵列')+' · 开凿声场';
+  document.title='让声谱，推动开凿。';
 }
 function changeCount(value){
   const next=validateCount(value);if(next===count)return;

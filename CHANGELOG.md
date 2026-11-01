@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0-lying-eight.9 — experiment/lying-eight
+
+- Unify page/browser title as 让声谱，推动开凿。 and remove the descriptive subtitle.
+- Fit every frequency band within the available width with count-aware spacing and zero fixed dense-band insets.
+
 ## 0.3.0-lying-eight.8 — experiment/lying-eight
 
 - Promote six user-recorded cameras into camera-only shortcuts, independent of channel count and response parameters.
