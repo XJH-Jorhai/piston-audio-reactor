@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createBands,measureBands,smoothLevels,restFromPhase,strokeFromLoudness,smoothStrokes} from '../src/spectrum.js';
+import {createBands,measureBands,smoothLevels,restFromPhase,strokeFromLoudness,smoothStrokes,createStrokeMapper,normalizeMapping,DEFAULT_MAPPING} from '../src/spectrum.js';
 
 test('sixteen logarithmic bands cover the requested range and valid FFT bins',()=>{
   const bands=createBands(48000,4096);
@@ -67,33 +67,39 @@ test('the 38% reference samples the actual asymmetric generator curve',()=>{
   assert.equal(restFromPhase(),rest);
 });
 
-test('loudness maps directly to opposite sides of rest without a hidden clock',()=>{
-  const rest=restFromPhase(.38);
-  assert.equal(strokeFromLoudness(0,{rest}),rest);
-  assert.equal(strokeFromLoudness(.001,{rest}),rest);
-  assert.equal(strokeFromLoudness(.5,{rest}),rest);
-  assert.equal(strokeFromLoudness(1,{rest,active:false}),rest);
-  assert.ok(strokeFromLoudness(.2,{rest})<rest-.1);
-  assert.ok(strokeFromLoudness(.8,{rest})>rest+.1);
-  assert.equal(strokeFromLoudness(1,{rest}),1);
-  assert.equal(strokeFromLoudness(.73,{rest}),strokeFromLoudness(.73,{rest}));
+test('default loudness mapping starts at generator 38 and reaches full body extension at 0',()=>{
+  const low=1-restFromPhase(.38),high=1;
+  assert.deepEqual(DEFAULT_MAPPING,{lowPhase:38,highPhase:0,response:1});
+  assert.equal(strokeFromLoudness(0),low);assert.equal(strokeFromLoudness(1),high);
+  assert.equal(strokeFromLoudness(.5),(low+high)/2);
+  assert.equal(strokeFromLoudness(1,{active:false}),low);
+  assert.ok(strokeFromLoudness(.001)>low);
+  assert.ok(strokeFromLoudness(.8)>strokeFromLoudness(.5));
+  assert.ok(strokeFromLoudness(.8)<1,'Generator timing plateaus must not saturate the audio mapping early.');
   const source=strokeFromLoudness.toString();
   assert.ok(!/\b(?:time|index|period|sin|cos|Date|performance)\b/.test(source));
 });
 
-test('quiet gate is continuous, active loudness is monotonic and all strokes stay bounded',()=>{
-  const rest=restFromPhase(.38);
-  assert.ok(Math.abs(strokeFromLoudness(.0020001,{rest})-rest)<1e-8);
-  let previous=strokeFromLoudness(.06,{rest});
-  for(let index=61;index<=1000;index++){
-    const current=strokeFromLoudness(index/1000,{rest});
-    assert.ok(current>=previous);
-    previous=current;
+test('mapping stays between editable endpoint poses, including reversal and constant poses',()=>{
+  for(const lowPhase of [0,32,50])for(const highPhase of [0,32,50])for(const response of [.25,1,4]){
+    const map=createStrokeMapper({lowPhase,highPhase,response}),a=map(0),b=map(1);let previous=a;
+    for(let index=-10;index<=110;index++){
+      const value=map(index/100);assert.ok(value>=Math.min(a,b)-1e-12&&value<=Math.max(a,b)+1e-12);
+      assert.ok((b-a)*(value-previous)>=-1e-12);previous=value;
+    }
+    assert.equal(map(1,false),a);
   }
-  for(const centre of [0,.01,.5,.99,1])for(let index=-10;index<=110;index++){
-    const q=strokeFromLoudness(index/100,{rest:centre});
-    assert.ok(q>=0&&q<=1);
-  }
+  assert.equal(strokeFromLoudness(0,{lowPhase:0,highPhase:50}),1);
+  assert.equal(strokeFromLoudness(1,{lowPhase:0,highPhase:50}),0);
+});
+
+test('response curvature changes intermediate positions while keeping both endpoints exact',()=>{
+  assert.ok(strokeFromLoudness(.2,{response:.25})>strokeFromLoudness(.2));
+  assert.ok(strokeFromLoudness(.2,{response:4})<strokeFromLoudness(.2));
+  for(const response of [.25,1,4]){assert.equal(strokeFromLoudness(0,{response}),strokeFromLoudness(0));assert.equal(strokeFromLoudness(1,{response}),1);}
+  assert.deepEqual(normalizeMapping({lowPhase:Infinity,highPhase:NaN,response:NaN}),DEFAULT_MAPPING);
+  assert.deepEqual(normalizeMapping({lowPhase:-1,highPhase:500,response:99}),{lowPhase:0,highPhase:50,response:4});
+  for(const level of [NaN,Infinity,-Infinity])assert.equal(strokeFromLoudness(level),strokeFromLoudness(0));
 });
 
 test('position smoothing is symmetric and frame-rate invariant, with a stationary target',()=>{

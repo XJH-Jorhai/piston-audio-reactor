@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createCamera,framePoints,perspectiveWeights,dot} from '../src/camera.js';
+import {createCamera,framePoints,perspectiveWeights,dot,orbitAngles,clipPolygon} from '../src/camera.js';
 import {framingCorners,machineCorners,COUNT} from '../src/scene.js';
 test('perspective camera has an orthonormal basis and safe clipping',()=>{
   const camera=createCamera();
@@ -29,4 +29,35 @@ test('CPU texture attributes use reciprocal depth, not affine interpolation',()=
   assert.ok(Math.abs(result.weights[0]-4/7)<1e-12);assert.ok(Math.abs(result.weights[1]-2/7)<1e-12);assert.ok(Math.abs(result.depth-24/7)<1e-12);
   const flat=perspectiveWeights([.2,.3,.5],[5,5,5]);
   flat.weights.forEach((v,i)=>assert.ok(Math.abs(v-[.2,.3,.5][i])<1e-12));
+});
+
+test('4–64 machines remain safely framed after free orbit and across both presets',()=>{
+  for(const count of [4,8,16,32,64])for(const mode of ['side','top','free']){
+    const orientations=mode==='free'?[-Math.PI,-1.2,0,1.2,Math.PI].flatMap(yaw=>[-1.55,0,1.55].map(elevation=>({yaw,elevation,roll:.3}))):[undefined];
+    for(const angles of orientations){
+      const camera=createCamera(mode,{count,angles}),points=framingCorners(count),framed=framePoints(camera,points,900,500);
+      assert.equal(camera.projection,'perspective');
+      for(const axis of [camera.forward,camera.right,camera.up])assert.ok(Math.abs(dot(axis,axis)-1)<1e-12);
+      for(const point of points){
+        const p=camera.project(point),x=(p[0]-framed.centerX)*framed.scale+450,y=(p[1]-framed.centerY)*framed.scale+250;
+        assert.ok(p[2]>camera.near&&p[2]<camera.far);
+        assert.ok(x>=0&&x<=900&&y>=0&&y<=500);
+      }
+    }
+  }
+});
+
+test('orbit wraps azimuth and clamps elevation before the poles',()=>{
+  const a=orbitAngles({yaw:0,elevation:0,roll:0},1e8,1e8);
+  assert.ok(a.yaw>=-Math.PI&&a.yaw<Math.PI);assert.ok(a.elevation<Math.PI/2);
+  assert.throws(()=>orbitAngles({yaw:NaN,elevation:0,roll:0},0,0));
+});
+
+test('CPU polygons crossing clipping planes retain finite positions and interpolated UVs',()=>{
+  const camera={eye:[0,0,0],forward:[0,0,1],near:1,far:10};
+  const vertices=[{point:[-1,0,.5],uv:[0,0]},{point:[1,0,2],uv:[1,0]},{point:[1,1,12],uv:[1,1]},{point:[-1,1,2],uv:[0,1]}];
+  const result=clipPolygon(camera,vertices);
+  assert.ok(result.length>=4);
+  for(const v of result){assert.ok(v.point[2]>=1&&v.point[2]<=10);assert.ok([...v.point,...v.uv].every(Number.isFinite));assert.ok(v.uv.every(x=>x>=0&&x<=1));}
+  assert.equal(clipPolygon(camera,vertices.map(v=>({...v,point:[0,0,.1]}))).length,0);
 });

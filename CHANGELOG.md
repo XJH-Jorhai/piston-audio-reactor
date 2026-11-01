@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0-corridor.1 — experiment/perspective-corridor
+
+- Sync 4–64 bands, free orbit/pan/zoom, editable loudness endpoints and response curvature from the modern linear route.
+- Default low-level pose to progress 38%, peak to progress 0%, with direct monotonic physical travel and browser persistence.
+- Add an independent developer camera library with perspective distance and JSON import/export.
+- Preserve the original close-foreground corridor preset, six-face perspective rendering and depth haze; add safe clipping for free camera angles and CPU rendering.
+- Fit frequency bands without horizontal scrolling, remove scene ordinals/subtitle, and use the shared page title.
+- Keep v0.2.0-corridor.1 tagged for comparison and rollback.
+
 ## 0.2.0-corridor.1 — experiment/perspective-corridor
 
 - Independent worktree from the v0.1.0-linear baseline.

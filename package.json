@@ -1,8 +1,12 @@
 {
-  "name":"piston-audio-reactor",
-  "version":"0.2.0-corridor.1",
-  "private":true,
-  "type":"module",
-  "description":"Sixteen Minecraft piston machines driven by a live audio spectrum.",
-  "scripts":{"dev":"node scripts/serve.mjs","test":"node --test tests/*.test.mjs","build":"node scripts/build.mjs"}
+  "name": "piston-audio-reactor",
+  "version": "0.3.0-corridor.1",
+  "private": true,
+  "type": "module",
+  "description": "Perspective Minecraft piston audio corridor with 4–64 bands, free orbit and editable stroke mapping.",
+  "scripts": {
+    "dev": "node scripts/serve.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "build": "node scripts/build.mjs"
+  }
 }
