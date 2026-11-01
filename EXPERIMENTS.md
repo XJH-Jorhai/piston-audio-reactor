@@ -1,0 +1,52 @@
+# 展示路线与回退
+
+## 基线
+
+- 稳定演示：https://xjh-jorhai.github.io/piston-audio-reactor/
+- 基线标签：v0.1.0-linear
+- 基线提交：f04b95726cf4b55d38580165197de485ff66e2c1
+- main 保留稳定线性版本，实验不直接合入其渲染器和音频映射。
+
+## 实验路线
+
+| 路线 | 分支 | 独立工作目录 | 预览 |
+| --- | --- | --- | --- |
+| 透视长廊 | experiment/perspective-corridor | ../piston-audio-reactor-corridor | https://xjh-jorhai.github.io/piston-audio-reactor/experiments/perspective-corridor/ |
+
+每条路线使用独立分支、独立 worktree、独立预览路径。先在实验分支提交并验证，再更新 main 中对应的预览快照。
+预览目录中的 preview.json 记录来源分支、完整提交和基线标签。
+
+## 新开一条路线
+
+在主目录执行，目录名和分支名按路线更换：
+
+    git worktree add -b experiment/grid ../piston-audio-reactor-grid v0.1.0-linear
+    git worktree list
+
+进入新目录后开发、测试和提交。不要在两个目录中检出同一分支。
+
+## 发布某一路线的预览
+
+先在实验 worktree 中完成提交，再回到 main 的工作目录：
+
+    node scripts/publish-preview.mjs --source ../piston-audio-reactor-corridor --slug perspective-corridor
+    git add experiments/perspective-corridor
+    git commit -m "Update perspective corridor preview"
+    git push origin main
+
+该命令检查来源 worktree 与当前仓库是否一致、来源是否已提交；只更新 experiments/ 下指定路线的静态快照。
+不修改根页面，不合并实验分支。静态快照可独立打开，其素材与许可随快照保存。
+
+## 比较与回退
+
+比较实验源码：
+
+    git diff v0.1.0-linear...experiment/perspective-corridor
+    git log --oneline --all --decorate
+
+开一个只读思路的基线工作目录供本地对照：
+
+    git worktree add --detach ../piston-audio-reactor-baseline v0.1.0-linear
+
+撤销实验中的某次更改，用 git revert 加新提交；撤销已发布预览，用 git revert 撤销对应的预览快照提交。
+这些操作保留历史，避免重写 main 或移动基线标签。无需删除或覆盖其他路线。
