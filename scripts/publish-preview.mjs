@@ -15,7 +15,10 @@ if(git(root,'branch','--show-current')!=='main')throw Error('Publish previews fr
 const branch=git(source,'branch','--show-current');
 if(!branch.startsWith('experiment/'))throw Error('Source must be an experiment/* branch.');
 if(git(source,'status','--porcelain'))throw Error('Commit source changes before creating a preview snapshot.');
-const commit=git(source,'rev-parse','HEAD'),baseTag='v0.1.0-linear';
+const commit=git(source,'rev-parse','HEAD'),baseTag=option('--base-tag')||'v0.1.0-linear';
+if(!/^v[0-9][a-zA-Z0-9.-]*$/.test(baseTag))throw Error('Invalid base tag.');
+git(source,'rev-parse','--verify','refs/tags/'+baseTag);
+git(source,'merge-base','--is-ancestor','refs/tags/'+baseTag,commit);
 if(git(source,'rev-parse','refs/remotes/origin/'+branch)!==commit)throw Error('Push the experiment branch before publishing its preview.');
 if(git(root,'status','--porcelain','--','experiments/'+slug))throw Error('Commit or revert the existing preview changes first.');
 execFileSync(process.execPath,['scripts/build.mjs'],{cwd:source,stdio:'inherit'});

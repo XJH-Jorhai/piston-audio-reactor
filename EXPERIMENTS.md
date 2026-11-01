@@ -12,6 +12,9 @@
 | 路线 | 分支 | 独立工作目录 | 预览 |
 | --- | --- | --- | --- |
 | 透视长廊 | experiment/perspective-corridor | ../piston-audio-reactor-corridor | https://xjh-jorhai.github.io/piston-audio-reactor/experiments/perspective-corridor/ |
+| 8 台横卧 | experiment/lying-eight | ../piston-audio-reactor-lying-eight | https://xjh-jorhai.github.io/piston-audio-reactor/experiments/lying-eight/ |
+
+横卧路线基于 v0.2.0-corridor.1，默认侧俯视，可切换正俯视（从长边正面斜向看入）；直接链接附加 ?view=top。两种视角均为正交投影，保留全部 8 台等大机器。
 
 每条路线使用独立分支、独立 worktree、独立预览路径。先在实验分支提交并验证，再更新 main 中对应的预览快照。
 预览目录中的 preview.json 记录来源分支、完整提交和基线标签。
@@ -39,6 +42,7 @@
     git push origin main
 
 该命令检查来源 worktree 与当前仓库是否一致、来源是否已提交；只更新 experiments/ 下指定路线的静态快照。
+来源必须已推送；可用 --base-tag 指定其他基线标签，脚本会验证该标签是来源提交的祖先。例如横卧路线使用 --source ../piston-audio-reactor-lying-eight --slug lying-eight --base-tag v0.2.0-corridor.1。
 不修改根页面，不合并实验分支。静态快照可独立打开，其素材与许可随快照保存。
 
 ## 比较与回退
