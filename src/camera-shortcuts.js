@@ -3,7 +3,7 @@ import {validateCount,arrayCenter,PITCH} from './machine.js';
 import {IS_LYING,centerForStation} from './layout.js';
 import {RECORDED_VIEWS} from './recorded-views.js';
 
-export const CAMERA_SHORTCUTS=IS_LYING?RECORDED_VIEWS:[];
+export const CAMERA_SHORTCUTS=RECORDED_VIEWS;
 /** Keep captured magnification and pose, but reanchor to the current array. */
 export function shortcutCamera(record,count){
   validateCount(count);validateCount(record.count);const camera=validateCameraState(record.camera);

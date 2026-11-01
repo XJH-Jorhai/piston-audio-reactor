@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0-linear.2 — experiment/linear-modern
+
+- Use the two user-recorded standing cameras 默认视角 and 开凿者 as channel-independent shortcuts.
+- Fit all frequency bands within the container instead of using a horizontal scrollbar.
+- Unify the page/browser title with the lying route and remove the descriptive subtitle.
+
 ## 0.2.0-linear.1 — experiment/linear-modern
 
 - Upgrade the standing linear route with the shared 4–64 channel controls and six-face depth renderer.
