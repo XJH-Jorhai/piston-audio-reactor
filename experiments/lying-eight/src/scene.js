@@ -1,4 +1,5 @@
 import {createCamera,framePoints,orbitAngles} from './camera.js';
+import {validateCameraState,adaptCameraFraming} from './view-presets.js';
 import {COUNT,PITCH,layPoint,machineParts,machineCorners,framingCorners,validateCount,arrayCenter} from './machine.js';
 export {COUNT,PITCH,machineParts,machineCorners,framingCorners} from './machine.js';
 const textureNames=['iron_block','carved_pumpkin','pumpkin_side','pumpkin_top','piston_top','piston_side','piston_inner','piston_bottom'];
@@ -64,11 +65,13 @@ function makeFloor(count){
   return faces;
 }
 
-export function createSceneRenderer(canvas,labelCanvas,images,{forceCpu=false,count=COUNT}={}){
+export function createSceneRenderer(canvas,images,{forceCpu=false,count=COUNT}={}){
   validateCount(count);
-  const atlas=buildAtlas(images),labels=labelCanvas.getContext('2d');
+  const atlas=buildAtlas(images);
   let points=framingCorners(count),floor=makeFloor(count),camera=createCamera('side',{count});
   const view={mode:'side',zoom:1,panX:0,panY:0,centerX:0,centerY:0,width:1,height:1,scale:1,dpr:1,pivot:[...camera.target]};
+  let framingReference;
+  const rememberFraming=()=>{framingReference={width:view.width,height:view.height,scale:view.scale,panX:view.panX,panY:view.panY};};
   let revision=0,backend,lastDraw=-1;
   let lastStrokes=new Float32Array(count),lastEnergy=new Float32Array(count);
   const worldToScreen=point=>{const p=camera.project(point),s=view.scale*view.zoom;return [(p[0]-view.centerX)*s+view.width/2+view.panX,(p[1]-view.centerY)*s+view.height/2+view.panY,-p[2]];};
@@ -124,10 +127,11 @@ export function createSceneRenderer(canvas,labelCanvas,images,{forceCpu=false,co
   }
   function resize(){
     const rect=canvas.getBoundingClientRect();view.width=Math.max(1,rect.width);view.height=Math.max(1,rect.height);view.dpr=backend.name==='cpu'?1:Math.min(devicePixelRatio||1,2);
-    canvas.width=Math.round(view.width*view.dpr);canvas.height=Math.round(view.height*view.dpr);labelCanvas.width=canvas.width;labelCanvas.height=canvas.height;
-    camera=createCamera(view.mode,{count,aspect:view.width/view.height,...(view.mode==='free'?{angles:camera.angles,target:view.pivot}:{})});
-    const framed=framePoints(camera,points,view.width,view.height);view.scale=framed.scale;revision++;
-    if(!view.focused){view.centerX=framed.centerX;view.centerY=framed.centerY;}
+    canvas.width=Math.round(view.width*view.dpr);canvas.height=Math.round(view.height*view.dpr);
+    camera=createCamera(view.mode,{count,aspect:view.width/view.height,...(view.mode==='free'?{angles:camera.angles,target:camera.target}:{})});
+    if(view.mode==='free'&&framingReference){const ratio=Math.min(view.width/framingReference.width,view.height/framingReference.height);view.scale=framingReference.scale*ratio;view.panX=framingReference.panX*ratio;view.panY=framingReference.panY*ratio;}
+    else{const framed=framePoints(camera,points,view.width,view.height);view.scale=framed.scale;if(!view.focused){view.centerX=framed.centerX;view.centerY=framed.centerY;}}
+    revision++;
   }
   const observer=new ResizeObserver(resize);observer.observe(canvas);resize();
   function draw(strokes,energy){
@@ -139,28 +143,19 @@ export function createSceneRenderer(canvas,labelCanvas,images,{forceCpu=false,co
       if(energy[i]>.001){const z=i*PITCH-2.75;backend.face([2.27,-1.023,z],[2.37,-1.023,z],[2.27,-1.023,z+2.6*energy[i]],i/count<1/3?'low':i/count<2/3?'mid':'high');}
     }
     backend.finish();
-    labels.setTransform(view.dpr,0,0,view.dpr,0,0);labels.clearRect(0,0,view.width,view.height);
-    labels.textAlign='center';labels.font='9px ui-monospace,Consolas,monospace';let previousLabel=null;
-    for(let i=0;i<count;i++){
-      const [x,y]=worldToScreen([2.70,-1.02,i*PITCH-1.45]);
-      if(x<0||x>view.width||y<0||y>view.height)continue;
-      if(previousLabel&&Math.hypot(x-previousLabel[0],y-previousLabel[1])<13&&i<count-1)continue;
-      if(i<count-1){const last=worldToScreen([2.70,-1.02,(count-1)*PITCH-1.45]);if(Math.hypot(x-last[0],y-last[1])<12)continue;}
-      previousLabel=[x,y];
-      labels.fillStyle=i/count<1/3?'#d2aa7f':i/count<2/3?'#b7c29c':'#91b0ad';labels.globalAlpha=.55+.45*energy[i];labels.fillText(String(i+1).padStart(2,'0'),x,y+10);
-    }
-    labels.globalAlpha=1;
     lastStrokes.set(strokes);lastEnergy.set(energy);lastDraw=revision;
   }
   return {backend:backend.name,draw,worldToScreen,get count(){return count;},get viewMode(){return view.mode;},get angles(){return {...camera.angles};},get zoom(){return view.zoom;},
-    setCount(value){validateCount(value);if(value===count)return;count=value;points=framingCorners(count);floor=makeFloor(count);camera=createCamera(view.mode,{count,angles:camera.angles});view.pivot=[...camera.target];lastStrokes=new Float32Array(count);lastEnergy=new Float32Array(count);view.focused=false;view.zoom=1;view.panX=view.panY=0;const framed=framePoints(camera,points,view.width,view.height);view.scale=framed.scale;view.centerX=framed.centerX;view.centerY=framed.centerY;revision++;},
+    captureCamera(){return validateCameraState({projection:'orthographic',angleUnit:'radians',angles:camera.angles,target:camera.target,pivot:view.pivot,center:[view.centerX,view.centerY],pan:[view.panX,view.panY],viewport:{width:view.width,height:view.height},scale:view.scale,zoom:view.zoom,focused:!!view.focused});},
+    restoreCamera(value){const state=validateCameraState(value),framed=adaptCameraFraming(state,view.width,view.height);camera=createCamera('free',{count,angles:state.angles,target:state.target});view.mode='free';view.pivot=state.pivot;view.centerX=state.center[0];view.centerY=state.center[1];view.zoom=state.zoom;view.focused=state.focused;view.scale=framed.scale;[view.panX,view.panY]=framed.pan;framingReference={width:state.viewport.width,height:state.viewport.height,scale:state.scale,panX:state.pan[0],panY:state.pan[1]};revision++;},
+    setCount(value){validateCount(value);if(value===count)return;count=value;points=framingCorners(count);floor=makeFloor(count);camera=createCamera(view.mode,{count,angles:camera.angles});view.pivot=[...camera.target];lastStrokes=new Float32Array(count);lastEnergy=new Float32Array(count);view.focused=false;view.zoom=1;view.panX=view.panY=0;const framed=framePoints(camera,points,view.width,view.height);view.scale=framed.scale;view.centerX=framed.centerX;view.centerY=framed.centerY;rememberFraming();revision++;},
     setView(mode){if(mode==='free'){this.orbit(0,0);return;}camera=createCamera(mode,{count,aspect:view.width/view.height});view.mode=mode;view.pivot=[...camera.target];view.zoom=1;view.panX=view.panY=0;view.focused=false;const framed=framePoints(camera,points,view.width,view.height);view.scale=framed.scale;view.centerX=framed.centerX;view.centerY=framed.centerY;revision++;},
-    orbit(dx,dy){const before=camera.project(view.pivot);camera=createCamera('free',{count,angles:orbitAngles(camera.angles,dx,dy),target:view.pivot});const after=camera.project(view.pivot);view.centerX+=after[0]-before[0];view.centerY+=after[1]-before[1];view.mode='free';revision++;},
-    setZoom(value){view.zoom=clamp(value,.65,12);revision++;},
-    pan(dx,dy){view.panX+=dx;view.panY+=dy;revision++;},
-    reset(){view.zoom=1;view.panX=view.panY=0;const framed=framePoints(camera,points,view.width,view.height);view.scale=framed.scale;view.centerX=framed.centerX;view.centerY=framed.centerY;view.pivot=arrayCenter(count);view.focused=false;revision++;},
+    orbit(dx,dy){const before=camera.project(view.pivot);camera=createCamera('free',{count,angles:orbitAngles(camera.angles,dx,dy),target:view.pivot});const after=camera.project(view.pivot);view.centerX+=after[0]-before[0];view.centerY+=after[1]-before[1];view.mode='free';rememberFraming();revision++;},
+    setZoom(value){view.zoom=clamp(value,.65,12);rememberFraming();revision++;},
+    pan(dx,dy){view.panX+=dx;view.panY+=dy;rememberFraming();revision++;},
+    reset(){view.zoom=1;view.panX=view.panY=0;const framed=framePoints(camera,points,view.width,view.height);view.scale=framed.scale;view.centerX=framed.centerX;view.centerY=framed.centerY;view.pivot=arrayCenter(count);view.focused=false;rememberFraming();revision++;},
     detail(){this.focus(3);},
-    focus(index){const framed=framePoints(camera,[0,1].flatMap(q=>machineCorners(q,index,count)),view.width,view.height);view.zoom=clamp(framed.scale*.83/view.scale,.65,12);view.panX=view.panY=0;view.centerX=framed.centerX;view.centerY=framed.centerY;view.pivot=[.5,.5,index*PITCH-1.5];view.focused=true;revision++;},
+    focus(index){const framed=framePoints(camera,[0,1].flatMap(q=>machineCorners(q,index,count)),view.width,view.height);view.zoom=clamp(framed.scale*.83/view.scale,.65,12);view.panX=view.panY=0;view.centerX=framed.centerX;view.centerY=framed.centerY;view.pivot=[.5,.5,index*PITCH-1.5];view.focused=true;rememberFraming();revision++;},
     dispose(){observer.disconnect();backend.dispose();}
   };
 }
