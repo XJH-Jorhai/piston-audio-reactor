@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#111619">
+  <meta name="description" content="16 台 Minecraft 原版开凿机，以真实音频频谱驱动活塞双向伸缩。">
+  <title>透视长廊试验 · 开凿声场</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111619'/%3E%3Cpath d='M6 21V12h5v9m3 0V6h5v15m3 0V15h5v6' stroke='%23f8ad52' stroke-width='3'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./src/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="./" class="brand"><span class="brand-icon" aria-hidden="true">▤</span><span>PISTON<span class="brand-sub">AUDIO REACTOR</span></span></a>
+    <nav aria-label="项目链接"><a href="https://xjh-jorhai.github.io/piston-audio-reactor/" target="_blank" rel="noopener">线性基线 ↗</a><a href="https://github.com/XJH-Jorhai/piston-audio-reactor/tree/experiment/perspective-corridor" target="_blank" rel="noopener">实验源码 ↗</a></nav>
+  </header>
+  <main>
+    <section class="intro">
+      <div><p class="eyebrow">EXPERIMENT 01 / PERSPECTIVE CORRIDOR</p><h1>声音，向纵深开凿。</h1><p class="intro-sub">前景放大，远处收束。16 台开凿机组成一条透视长廊。</p></div>
+      <div class="intro-data"><div><strong>16</strong><span>独立频段</span></div><div><strong>38<span>%</span></strong><span>静止姿态</span></div><div><strong>±</strong><span>双向行程</span></div></div>
+    </section>
+    <section id="visualizer" class="scene-card" aria-label="开凿机音频可视化">
+      <div class="scene-top">
+        <div class="scene-title"><span class="live-dot" id="live-dot"></span><span id="status" role="status">正在加载开凿机…</span></div>
+        <div class="view-controls" role="group" aria-label="视角">
+          <button id="zoom-out" type="button" aria-label="缩小视图" title="缩小">−</button><output id="zoom-label">100%</output><button id="zoom-in" type="button" aria-label="放大视图" title="放大">＋</button>
+          <button id="reset-view" type="button">长廊</button><button id="detail-view" type="button">前景</button><button id="fullscreen" type="button" aria-label="切换全屏">全屏 ↗</button>
+        </div>
+      </div>
+      <div class="stage" id="stage">
+        <div class="stage-grid" aria-hidden="true"></div>
+        <canvas id="reactor" role="img" aria-label="16 台 Minecraft 原版开凿机组成的线性阵列，低频至高频从左至右排列"></canvas>
+        <canvas id="labels" aria-hidden="true"></canvas>
+        <div class="stage-axis"><span>PERSPECTIVE CORRIDOR / 01—16</span><span>40 Hz → 16 kHz</span></div>
+        <button id="start" type="button" class="start-card"><span class="start-icon">▶</span><span><strong>启动声场</strong><small>Assumptions / Sam Gellaitry</small></span></button>
+        <div id="scene-error" class="scene-error" role="alert" hidden></div>
+        <div class="stage-help">拖动平移 · 滚轮缩放</div>
+      </div>
+      <div class="spectrum-header"><span>FREQUENCY / 低频 → 高频</span><span id="peak-reading">峰值 —</span></div>
+      <div id="spectrum" class="spectrum" aria-label="16 个频段的实时幅度，点击频段查看对应开凿机"></div>
+      <div class="transport">
+        <div class="track"><span class="track-symbol" aria-hidden="true">♫</span><div><strong id="track-title">Assumptions</strong><span id="track-artist">Sam Gellaitry</span></div></div>
+        <audio id="audio" controls autoplay preload="metadata" src="./assets/audio/sam-gellaitry-assumptions.mp3" aria-label="音频播放器">你的浏览器不支持音频播放。</audio>
+        <button id="upload" class="upload-button" type="button">更换音频 ↗</button><input id="audio-file" type="file" accept="audio/*,.mp3,.wav,.m4a,.ogg,.flac" hidden>
+      </div>
+    </section>
+    <section class="controls" aria-label="音频响应设置">
+      <div class="parameter"><div><label for="gain">响应强度</label><output id="gain-value">1.4×</output></div><input id="gain" type="range" min=".3" max="3" step=".1" value="1.4"></div>
+      <div class="parameter"><div><label for="smooth">动作平滑</label><output id="smooth-value">55%</output></div><input id="smooth" type="range" min="0" max="95" step="1" value="55"></div>
+      <div class="parameter"><div><label for="rest">静止姿态</label><output id="rest-value">38%</output></div><input id="rest" type="range" min="25" max="50" step="1" value="38" title="沿用生成器曲线的进度位置"></div>
+      <div class="live-reading"><span>输入电平</span><strong id="level-reading">—<small> dBFS</small></strong></div>
+    </section>
+    <div class="below-controls"><p>高电平铁傀儡伸出，低电平收回；左右铁块反向，静音回到中位。</p><button id="reset-settings" type="button">恢复响应默认值 ⤾</button></div>
+    <p id="message" class="message" role="status" hidden></p>
+  </main>
+  <footer><span>PISTON / AUDIO REACTOR</span><div><a href="https://github.com/wzk112/reactor-audio-visualizer" target="_blank" rel="noopener">参考：Andy Wang / Reactor ↗</a><a href="./CREDITS.md" target="_blank" rel="noopener">素材与许可 ↗</a></div></footer>
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>
