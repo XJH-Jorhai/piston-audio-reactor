@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0-linear.1 — experiment/linear-modern
+
+- Upgrade the standing linear route with the shared 4–64 channel controls and six-face depth renderer.
+- Add free orbit, pan, zoom, preset cameras, viewport-aware fit and JSON developer view library.
+- Sync editable loudness endpoints, response curvature, browser persistence and the 32→0 default.
+- Preserve the standing X-axis layout, fixed pumpkin/piston housings, original 3.9-block pitch and forward/backward motion.
+- Separate standing camera records/settings from the lying route; retain v0.1.0-linear as a legacy preview.
+
 ## 0.3.0-lying-eight.8 — experiment/lying-eight
 
 - Promote six user-recorded cameras into camera-only shortcuts, independent of channel count and response parameters.

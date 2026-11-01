@@ -1,4 +1,4 @@
-export const LAYOUT='lying';
+export const LAYOUT='linear';
 export const IS_LYING=LAYOUT==='lying';
 export const DEFAULT_COUNT=IS_LYING?8:16;
 export const STATION_PITCH=IS_LYING?3.5:3.9;
