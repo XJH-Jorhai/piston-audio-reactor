@@ -50,7 +50,7 @@ function syncCount(){
   $('channel-count').value=count;$('channel-count-value').value=count+' 路';$('machine-count-value').textContent=count;
   $('intro-description').textContent=count+' 台横卧，三列联动。中央升起，两侧落下。';
   $('array-label').textContent='THREE LANES / 01—'+String(count).padStart(2,'0');
-  for(const value of [8,16])$('count-'+value).setAttribute('aria-pressed',String(count===value));
+  for(const value of [8,16,32])$('count-'+value).setAttribute('aria-pressed',String(count===value));
   canvas.dataset.machines=count;canvas.setAttribute('aria-label',count+' 台横卧开凿机组成三条平行轨道；中央躯干升降，两侧手臂反向联动。方向键旋转，Shift 加方向键平移，Home 适配。');
   document.title=count+' 路横卧试验 · 开凿声场';
 }
@@ -61,7 +61,7 @@ function changeCount(value){
   renderBands();syncCount();syncView();const url=new URL(location.href);url.searchParams.set('count',count);history.replaceState(null,'',url);
 }
 $('channel-count').addEventListener('input',event=>changeCount(Number(event.target.value)));
-for(const value of [8,16])$('count-'+value).addEventListener('click',()=>changeCount(value));
+for(const value of [8,16,32])$('count-'+value).addEventListener('click',()=>changeCount(value));
 function syncView(){
   if(!renderer)return;$('zoom-label').value=Math.round(renderer.zoom*100)+'%';
   for(const mode of ['side','top','free'])$('view-'+mode).setAttribute('aria-pressed',String(renderer.viewMode===mode));

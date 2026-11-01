@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0-lying-eight.5 — experiment/lying-eight
+
+- Add a 32-channel shortcut beside the 8/16-channel controls.
+
 ## 0.3.0-lying-eight.4 — experiment/lying-eight
 
 - Fit recomputes the base scale at the current orbit angle, so end-on views correctly fill the available canvas.
