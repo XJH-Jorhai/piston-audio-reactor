@@ -27,7 +27,11 @@
 
 ## 发布某一路线的预览
 
-先在实验 worktree 中完成提交，再回到 main 的工作目录：
+先在实验 worktree 中完成提交并推送：
+
+    git push -u origin experiment/perspective-corridor
+
+再回到 main 的工作目录：
 
     node scripts/publish-preview.mjs --source ../piston-audio-reactor-corridor --slug perspective-corridor
     git add experiments/perspective-corridor
