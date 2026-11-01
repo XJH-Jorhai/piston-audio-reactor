@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0-lying-eight.7 — experiment/lying-eight
+
+- Collapsible developer camera library: name/capture multiple views, restore, remove, export one/all and import versioned JSON.
+- Include complete camera composition, viewport, orbit pivot, channel count and response settings; retain records in browser storage.
+- Proportional composition restore across viewports and stable free-view resizing.
+- Remove rendered channel ordinals, spectrum codes and the numbered corner legend.
+
 ## 0.3.0-lying-eight.6 — experiment/lying-eight
 
 - Default silence/low-level pose is generator progress 32; peak loudness maps to progress 0 (fully extended central body).

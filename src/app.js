@@ -1,6 +1,7 @@
 import {createBands,measureBands,smoothLevels,smoothStrokes,createStrokeMapper,DEFAULT_MAPPING,normalizeMapping} from './spectrum.js';
 import {COUNT,createSceneRenderer,loadTextures} from './scene.js';
 import {validateCount} from './machine.js';
+import {mountViewDeveloper} from './view-developer.js';
 const $=id=>document.getElementById(id),audio=$('audio'),canvas=$('reactor');
 const defaults={gain:1.4,smooth:55,...DEFAULT_MAPPING},settings={...defaults},mappingKey='piston-lying-loudness-mapping-v1';
 let storageAvailable=true;
@@ -45,14 +46,14 @@ function renderBands(){
     const button=document.createElement('button');button.type='button';button.className='band';button.dataset.band=index;button.dataset.tone=index/count<1/3?'low':index/count<2/3?'mid':'high';button.setAttribute('aria-pressed',String(index===selected));
     button.title='查看第 '+(index+1)+' 台 · '+Math.round(band.low)+'–'+Math.round(band.high)+' Hz';
     button.setAttribute('aria-label',button.title);
-    button.innerHTML='<div class="band-meter" role="meter" aria-label="频段 '+(index+1)+' 幅度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="band-fill"></div></div><div class="band-meta"><span class="band-frequency">'+frequencyLabel(band.low)+'</span><span class="band-code">'+String(index+1).padStart(2,'0')+'</span><span class="band-direction" aria-label="中位">·</span></div>';
+    button.innerHTML='<div class="band-meter" role="meter" aria-label="频段 '+(index+1)+' 幅度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="band-fill"></div></div><div class="band-meta"><span class="band-frequency">'+frequencyLabel(band.low)+'</span><span class="band-direction" aria-label="中位">·</span></div>';
     button.addEventListener('click',()=>{if(!renderer)return;selected=index;renderer.focus(index);syncView();});root.append(button);bandButtons.push(button);
   });
 }
 function syncCount(){
   $('channel-count').value=count;$('channel-count-value').value=count+' 路';$('machine-count-value').textContent=count;
   $('intro-description').textContent=count+' 台横卧，三列联动。中央升起，两侧落下。';
-  $('array-label').textContent='THREE LANES / 01—'+String(count).padStart(2,'0');
+  $('array-label').textContent='THREE LANES';
   for(const value of [8,16,32,64])$('count-'+value).setAttribute('aria-pressed',String(count===value));
   canvas.dataset.machines=count;canvas.setAttribute('aria-label',count+' 台横卧开凿机组成三条平行轨道；中央躯干升降，两侧手臂反向联动。方向键旋转，Shift 加方向键平移，Home 适配。');
   document.title=count+' 路横卧试验 · 开凿声场';
@@ -86,6 +87,10 @@ function saveMapping(){try{localStorage.setItem(mappingKey,JSON.stringify(normal
 for(const key of Object.keys(defaults))$(key).addEventListener('input',event=>{settings[key]=Number(event.target.value);if(key in DEFAULT_MAPPING)saveMapping();syncSettings();});
 $('reset-mapping').addEventListener('click',()=>{Object.assign(settings,DEFAULT_MAPPING);saveMapping();syncSettings();});
 $('reset-settings').addEventListener('click',()=>{Object.assign(settings,defaults);saveMapping();syncSettings();});
+const developerTools=mountViewDeveloper({
+  capture(){if(!renderer)throw Error('请等待模型加载完成。');return {count,selected:selected<0?null:selected,camera:renderer.captureCamera(),settings:{...settings}};},
+  restore(record){Object.assign(settings,record.settings);saveMapping();syncSettings();changeCount(record.count);renderer.restoreCamera(record.camera);selected=record.selected??-1;syncView();}
+});
 $('start').addEventListener('click',startAudio);
 audio.addEventListener('play',()=>{try{ensureAudio().then(updateStatus).catch(()=>{});}catch(error){notice(error.message);}updateStatus();});
 audio.addEventListener('playing',updateStatus);
@@ -167,7 +172,7 @@ function frame(now){
 }
 renderBands();syncCount();syncSettings();requestAnimationFrame(frame);
 try{
-  renderer=createSceneRenderer(canvas,$('labels'),await loadTextures(),{count,forceCpu:new URLSearchParams(location.search).get('renderer')==='cpu'});canvas.dataset.renderer=renderer.backend;canvas.dataset.projection='orthographic';canvas.dataset.orientation='lying';if(new URLSearchParams(location.search).get('view')==='top')renderer.setView('top');syncView();updateStatus();startAudio();
+  renderer=createSceneRenderer(canvas,await loadTextures(),{count,forceCpu:new URLSearchParams(location.search).get('renderer')==='cpu'});canvas.dataset.renderer=renderer.backend;canvas.dataset.projection='orthographic';canvas.dataset.orientation='lying';if(new URLSearchParams(location.search).get('view')==='top')renderer.setView('top');syncView();developerTools.setReady();updateStatus();startAudio();
 }catch(error){$('scene-error').hidden=false;$('scene-error').textContent='开凿机加载失败：'+error.message;$('status').textContent='可视化暂不可用';}
 window.addEventListener('pagehide',()=>{audio.pause();context?.suspend();});
 window.addEventListener('pageshow',event=>{if(event.persisted)updateStatus();});
