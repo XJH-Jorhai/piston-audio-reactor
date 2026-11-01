@@ -1,6 +1,6 @@
 {
   "name": "piston-audio-reactor",
-  "version": "0.2.0-linear.4",
+  "version": "0.2.0-linear.5",
   "private": true,
   "type": "module",
   "description": "Adjustable 4–64 lying Minecraft piston machines with editable loudness-to-stroke mapping.",

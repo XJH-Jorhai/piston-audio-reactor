@@ -1,9 +1,9 @@
-import {createBands,measureBands,smoothLevels,smoothStrokes,createStrokeMapper,DEFAULT_MAPPING,normalizeMapping} from './spectrum.js';
-import {COUNT,createSceneRenderer,loadTextures} from './scene.js';
-import {validateCount} from './machine.js';
-import {mountViewDeveloper} from './view-developer.js';
-import {LAYOUT,IS_LYING,SHOW_DEVELOPER,sceneDescription} from './layout.js';
-import {CAMERA_SHORTCUTS,shortcutCamera} from './camera-shortcuts.js';
+import {createBands,measureBands,smoothLevels,smoothStrokes,createStrokeMapper,DEFAULT_MAPPING,normalizeMapping} from './spectrum.js?v=continuous-1';
+import {COUNT,createSceneRenderer,loadTextures} from './scene.js?v=continuous-1';
+import {validateCount} from './machine.js?v=continuous-1';
+import {mountViewDeveloper} from './view-developer.js?v=continuous-1';
+import {LAYOUT,IS_LYING,SHOW_DEVELOPER,sceneDescription} from './layout.js?v=continuous-1';
+import {CAMERA_SHORTCUTS,shortcutCamera} from './camera-shortcuts.js?v=continuous-1';
 export const preload=loadTextures;
 
 export async function mountReactor({session,textures,autostart=true,resumeState}={}){
