@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0-lying-eight.6 — experiment/lying-eight
+
+- Default silence/low-level pose is generator progress 32; peak loudness maps to progress 0 (fully extended central body).
+- Editable low/high endpoint poses and response curvature, automatically retained in this browser with a reset button.
+- Direct interpolation of physical endpoint extensions avoids generator timing plateaus and the old opposite-direction dip.
+- Increase channel limit to 64 and add a shortcut; grow GPU vertex storage when required.
+
 ## 0.3.0-lying-eight.5 — experiment/lying-eight
 
 - Add a 32-channel shortcut beside the 8/16-channel controls.

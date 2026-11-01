@@ -61,8 +61,8 @@ test('orbit handles long drags and clamps before the vertical singularity',()=>{
   assert.throws(()=>createCamera('free',{angles:{yaw:NaN,elevation:0,roll:0}}),RangeError);
 });
 
-test('4 to 32 machines remain inside framing and clipping planes at end-on and oblique angles',()=>{
-  for(const count of [4,8,16,32])for(const [yaw,elevation] of [[0,.8],[Math.PI/2,.1],[-Math.PI/2,-.8],[Math.PI,1.55]]){
+test('4 to 64 machines remain inside framing and clipping planes at end-on and oblique angles',()=>{
+  for(const count of [4,8,16,32,64])for(const [yaw,elevation] of [[0,.8],[Math.PI/2,.1],[-Math.PI/2,-.8],[Math.PI,1.55]]){
     const camera=createCamera('free',{count,angles:{yaw,elevation,roll:.25}}),points=framingCorners(count),frame=framePoints(camera,points,900,500);
     for(const p of points){
       const projected=camera.project(p),x=(projected[0]-frame.centerX)*frame.scale+450,y=(projected[1]-frame.centerY)*frame.scale+250;

@@ -79,7 +79,7 @@ export function createSceneRenderer(canvas,labelCanvas,images,{forceCpu=false,co
     const fs=shader(gl.FRAGMENT_SHADER,'#version 300 es\nprecision highp float;in vec2 v_uv;in float v_depth;uniform sampler2D u_atlas;out vec4 color;void main(){color=texture(u_atlas,v_uv);if(color.a<.015)discard;}');
     const program=gl.createProgram();gl.attachShader(program,vs);gl.attachShader(program,fs);gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));
     gl.deleteShader(vs);gl.deleteShader(fs);gl.useProgram(program);
-    const buffer=gl.createBuffer(),texture=gl.createTexture(),vertices=new Float32Array(180000);let cursor=0;
+    const buffer=gl.createBuffer(),texture=gl.createTexture();let vertices=new Float32Array(180000),cursor=0;
     gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
     const position=gl.getAttribLocation(program,'a_pos'),uv=gl.getAttribLocation(program,'a_uv');
     gl.enableVertexAttribArray(position);gl.vertexAttribPointer(position,3,gl.FLOAT,false,20,0);gl.enableVertexAttribArray(uv);gl.vertexAttribPointer(uv,2,gl.FLOAT,false,20,12);
@@ -92,6 +92,7 @@ export function createSceneRenderer(canvas,labelCanvas,images,{forceCpu=false,co
       cursor=0;gl.viewport(0,0,canvas.width,canvas.height);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
       gl.uniform4f(cameraUniform,view.centerX,view.centerY,view.scale*view.zoom,0);gl.uniform4f(screen,view.width,view.height,view.panX,view.panY);
     },face(a,b,c,name){
+      if(cursor+30>vertices.length){const expanded=new Float32Array(vertices.length*2);expanded.set(vertices);vertices=expanded;}
       const t=atlas.entries.get(name),d=[b[0]+c[0]-a[0],b[1]+c[1]-a[1],b[2]+c[2]-a[2]];
       const vertex=(p,u,v)=>{vertices[cursor++]=p[0];vertices[cursor++]=p[1];vertices[cursor++]=p[2];vertices[cursor++]=t.u+u*t.w;vertices[cursor++]=t.v+v*t.h;};
       vertex(a,0,0);vertex(b,1,0);vertex(c,0,1);vertex(c,0,1);vertex(b,1,0);vertex(d,1,1);

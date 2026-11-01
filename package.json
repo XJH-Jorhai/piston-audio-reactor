@@ -1,8 +1,8 @@
 {
   "name":"piston-audio-reactor",
-  "version":"0.3.0-lying-eight.5",
+  "version":"0.3.0-lying-eight.6",
   "private":true,
   "type":"module",
-  "description":"Adjustable 4–32 lying Minecraft piston machines with an orbit camera and live audio spectrum.",
+  "description":"Adjustable 4–64 lying Minecraft piston machines with editable loudness-to-stroke mapping.",
   "scripts":{"dev":"node scripts/serve.mjs","test":"node --test tests/*.test.mjs","build":"node scripts/build.mjs"}
 }

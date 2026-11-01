@@ -92,7 +92,7 @@ test('framing endpoints bound all eight machines throughout their travel',()=>{
 });
 
 test('variable channel counts bound exactly the requested stations without changing pitch',()=>{
-  for(let count=4;count<=32;count++){
+  for(let count=4;count<=64;count++){
     assert.equal(validateCount(count),count);
     const corners=framingCorners(count),zs=corners.map(p=>p[2]),last=machineCorners(.5,count-1,count);
     assert.equal(Math.min(...zs),-3);almost(Math.max(...zs),(count-1)*PITCH);
@@ -100,5 +100,5 @@ test('variable channel counts bound exactly the requested stations without chang
     assert.deepEqual(arrayCenter(count),[.5,.5,((count-1)*PITCH-3)/2]);
     assert.throws(()=>machineCorners(.5,count,count),RangeError);
   }
-  for(const value of [0,3,33,8.5,NaN,Infinity,'16'])assert.throws(()=>framingCorners(value),RangeError);
+  for(const value of [0,3,65,8.5,NaN,Infinity,'16'])assert.throws(()=>framingCorners(value),RangeError);
 });

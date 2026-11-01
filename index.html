@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#111619">
-  <meta name="description" content="4–32 路横卧开凿机组成三列机械声谱，自由观察，直接跟随频段响度升降。">
+  <meta name="description" content="4–64 路横卧开凿机组成三列机械声谱，自由观察，自定义电平与行程映射。">
   <title>8 台横卧试验 · 开凿声场</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111619'/%3E%3Cpath d='M6 21V12h5v9m3 0V6h5v15m3 0V15h5v6' stroke='%23f8ad52' stroke-width='3'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="./src/style.css">
@@ -46,13 +46,21 @@
       </div>
     </section>
     <section class="controls" aria-label="音频响应设置">
-      <div class="parameter channels"><div><label for="channel-count">频谱路数</label><output id="channel-count-value">8 路</output></div><input id="channel-count" type="range" min="4" max="32" step="1" value="8"><div class="count-presets"><button id="count-8" type="button" aria-pressed="true">8 路</button><button id="count-16" type="button" aria-pressed="false">16 路</button><button id="count-32" type="button" aria-pressed="false">32 路</button></div></div>
+      <div class="parameter channels"><div><label for="channel-count">频谱路数</label><output id="channel-count-value">8 路</output></div><input id="channel-count" type="range" min="4" max="64" step="1" value="8"><div class="count-presets"><button id="count-8" type="button" aria-pressed="true">8 路</button><button id="count-16" type="button" aria-pressed="false">16 路</button><button id="count-32" type="button" aria-pressed="false">32 路</button><button id="count-64" type="button" aria-pressed="false">64 路</button></div></div>
       <div class="parameter"><div><label for="gain">响应强度</label><output id="gain-value">1.4×</output></div><input id="gain" type="range" min=".3" max="3" step=".1" value="1.4"></div>
       <div class="parameter"><div><label for="smooth">动作平滑</label><output id="smooth-value">55%</output></div><input id="smooth" type="range" min="0" max="95" step="1" value="55"></div>
-      <div class="parameter"><div><label for="rest">静止姿态</label><output id="rest-value">38%</output></div><input id="rest" type="range" min="25" max="50" step="1" value="38" title="沿用生成器曲线的进度位置"></div>
       <div class="live-reading"><span>输入电平</span><strong id="level-reading">—<small> dBFS</small></strong></div>
     </section>
-    <div class="below-controls"><p>高响度躯干升起、手臂落下；静音回到中位。两种视角可随时切换。</p><button id="reset-settings" type="button">恢复响应默认值 ⤾</button></div>
+    <section class="mapping-controls" aria-label="电平与行程映射">
+      <div class="mapping-heading"><div><strong>电平 → 行程</strong><output id="mapping-summary">32% → 0%</output></div><button id="reset-mapping" type="button">恢复 32 → 0 ⤾</button></div>
+      <div class="mapping-inputs">
+        <div class="parameter"><div><label for="lowPhase">低电平 / 静音姿态</label><output id="lowPhase-value">32%</output></div><input id="lowPhase" type="range" min="0" max="50" step="1" value="32"></div>
+        <div class="parameter"><div><label for="highPhase">高电平姿态</label><output id="highPhase-value">0%</output></div><input id="highPhase" type="range" min="0" max="50" step="1" value="0"></div>
+        <div class="parameter"><div><label for="response">响应曲线</label><output id="response-value">1.0×</output></div><input id="response" type="range" min=".25" max="4" step=".05" value="1"></div>
+      </div>
+      <div class="mapping-help"><p>姿态沿用生成器进度：0% 为躯干全伸出，50% 为全收回。曲线小于 1 时，弱信号动作更明显。</p><span id="mapping-storage">自动保存在此浏览器</span></div>
+    </section>
+    <div class="below-controls"><p>静音停在低电平姿态，电平升高时向高电平姿态移动。</p><button id="reset-settings" type="button">恢复响应默认值 ⤾</button></div>
     <p id="message" class="message" role="status" hidden></p>
   </main>
   <footer><span>PISTON / AUDIO REACTOR</span><div><a href="https://github.com/wzk112/reactor-audio-visualizer" target="_blank" rel="noopener">参考：Andy Wang / Reactor ↗</a><a href="./CREDITS.md" target="_blank" rel="noopener">素材与许可 ↗</a></div></footer>
