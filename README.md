@@ -29,3 +29,7 @@ npm run build
 `player/` 是可整体部署的独立页面，构建结果位于 `dist/player/`。根目录和 `experiments/` 仍保留定格版本；新页面的预览位于独立目录 `experiments/music-player/`。
 
 详细说明见 [player/README.md](player/README.md)，素材与权属见 [player/CREDITS.md](player/CREDITS.md)。
+
+## 网易云接入规划
+
+优先研究网易云官方接入，用户凭证不持久化；授权尚未上线。官方目前对个人应用仅提供 CLI，公开 Web API 需先确认厂商接入权限。授权流程、独立后端边界与验收要求见 [网易云接入与授权凭证处理](docs/netease-integration.md)。不要向聊天或仓库提交私钥、密码和账号 Cookie。
