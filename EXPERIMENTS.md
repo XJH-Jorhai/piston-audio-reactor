@@ -12,7 +12,7 @@
 
 | 路线 | 分支 | 独立工作目录 | 预览 |
 | --- | --- | --- | --- |
-| 透视长廊 | experiment/perspective-corridor | ../piston-audio-reactor-corridor | https://xjh-jorhai.github.io/piston-audio-reactor/experiments/perspective-corridor/ |
+| 透视长廊（4–64 路） | experiment/perspective-corridor | ../piston-audio-reactor-corridor | https://xjh-jorhai.github.io/piston-audio-reactor/experiments/perspective-corridor/ |
 | 横卧阵列（4–64 路） | experiment/lying-eight | ../piston-audio-reactor-lying-eight | https://xjh-jorhai.github.io/piston-audio-reactor/experiments/lying-eight/ |
 | 线性版升级（4–64 路） | experiment/linear-modern | ../piston-audio-reactor-linear-modern | https://xjh-jorhai.github.io/piston-audio-reactor/ |
 | 原始线性版 | v0.1.0-linear 标签 | — | https://xjh-jorhai.github.io/piston-audio-reactor/experiments/linear-legacy/ |
@@ -20,6 +20,8 @@
 横卧路线基于 v0.2.0-corridor.1，默认侧俯视，可切换正俯视（从长边正面斜向看入）或拖动自由旋转；直接链接附加 ?view=top。采用正交投影，机器等大。默认 8 路，支持 4–64 路调节，附加 ?count=64 可打开 64 路；切换路数保留角度、自动适配并重新分配频段。映射默认低电平进度 32 → 高电平进度 0（躯干全伸出），可在页面编辑两端姿态与响应曲线并自动保存在当前浏览器。
 
 横卧版的六个用户视角以 ?preset=saved-1 至 saved-6 切换，保持当前路数与映射独立，开发者面板隐藏。线性版沿用相同控制核心，保留站立造型和 X 轴排列，开发者记录/JSON 继续可用，保存空间按版本分开。
+
+透视长廊 v0.3.0-corridor.1 同步 4–64 路、自由旋转/平移/缩放、响应强度和平滑、电平两端姿态与响应曲线，默认 38 → 0。保留原始近大远小长廊构图和轻度远景雾化，增加俯视预设。开发者视角库独立保存透视距离、构图和响应参数，支持 JSON 导入/导出；不能与正交视角记录混用。频谱完整适配容器，标题统一且移除序号和副标题。旧版 v0.2.0-corridor.1 标签继续保留。
 
 线性升级先在独立分支提交并推送，再从 main 执行 `node scripts/sync-linear.mjs --source ../piston-audio-reactor-linear-modern`。脚本检查源提交、远端和工作区状态，首次同步前归档原始线性页，只复制根站点源码/测试与文档；不覆盖实验快照。linear-release.json 记录根站点来源提交。撤回根站点升级可 revert 对应发布提交。
 

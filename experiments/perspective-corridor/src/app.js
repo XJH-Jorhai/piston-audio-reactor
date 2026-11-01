@@ -1,10 +1,20 @@
-import {createBands,measureBands,smoothLevels,smoothStrokes,restFromPhase,strokeFromLoudness} from './spectrum.js';
+import {createBands,measureBands,smoothLevels,smoothStrokes,createStrokeMapper,DEFAULT_MAPPING,normalizeMapping} from './spectrum.js';
 import {COUNT,createSceneRenderer,loadTextures} from './scene.js';
+import {validateCount} from './machine.js';
+import {mountViewDeveloper} from './view-developer.js';
+import {LAYOUT,IS_LYING,SHOW_DEVELOPER,sceneDescription} from './layout.js';
+import {CAMERA_SHORTCUTS,shortcutCamera} from './camera-shortcuts.js';
 const $=id=>document.getElementById(id),audio=$('audio'),canvas=$('reactor');
-const defaults={gain:1.4,smooth:55,rest:38},settings={...defaults};
-let renderer,context,analyser,source,wave,bands=createBands(48000,4096),bins,objectUrl,autoPending=true,drag,previousTime=0,lastMeters=0;
-let energy=new Float32Array(COUNT),strokes=new Float32Array(COUNT).fill(1-restFromPhase(.38)),selected=-1;
-const EMPTY=new Float32Array(COUNT),bandButtons=[],frequencyLabel=hz=>hz>=1000?(hz/1000).toFixed(hz>=10000?0:1).replace(/\.0$/,'')+'k':Math.round(hz).toString();
+const defaults={gain:1.4,smooth:55,...DEFAULT_MAPPING},settings={...defaults},mappingKey='piston-'+LAYOUT+'-loudness-mapping-v1';
+let activeShortcut=null;const shortcutButtons=[];
+let storageAvailable=true;
+try{const saved=localStorage.getItem(mappingKey);if(saved!==null)Object.assign(settings,normalizeMapping(JSON.parse(saved)));}catch{storageAvailable=false;}
+let mapStroke=createStrokeMapper(settings);
+let count=COUNT;try{const requested=new URLSearchParams(location.search).get('count');if(requested!==null)count=validateCount(Number(requested));}catch{}
+let renderer,context,analyser,source,wave,bands=createBands(48000,4096,count),bins,objectUrl,autoPending=true,panMode=false,previousTime=0,lastMeters=0;
+const pointers=new Map();
+let energy=new Float32Array(count),strokes=new Float32Array(count).fill(mapStroke(0)),selected=-1,EMPTY=new Float32Array(count);
+const bandButtons=[],frequencyLabel=hz=>hz>=1000?(hz/1000).toFixed(hz>=10000?0:1).replace(/\.0$/,'')+'k':Math.round(hz).toString();
 function notice(text){$('message').textContent=text;$('message').hidden=!text;}
 function updateStatus(){
   const active=!audio.paused&&context?.state==='running';
@@ -18,7 +28,7 @@ function ensureAudio(){
     const Audio=window.AudioContext||window.webkitAudioContext;
     if(!Audio)throw Error('当前浏览器不支持 Web Audio 音频分析，请使用新版浏览器。');
     context=new Audio();analyser=context.createAnalyser();analyser.fftSize=4096;analyser.smoothingTimeConstant=.12;
-    bins=new Float32Array(analyser.frequencyBinCount);wave=new Float32Array(analyser.fftSize);bands=createBands(context.sampleRate,analyser.fftSize);
+    bins=new Float32Array(analyser.frequencyBinCount);wave=new Float32Array(analyser.fftSize);bands=createBands(context.sampleRate,analyser.fftSize,count);
     source=context.createMediaElementSource(audio);source.connect(analyser);analyser.connect(context.destination);
     context.addEventListener('statechange',updateStatus);renderBands();
   }
@@ -34,26 +44,64 @@ async function startAudio(){
 }
 function renderBands(){
   const root=$('spectrum');root.replaceChildren();bandButtons.length=0;
+  root.style.setProperty('--band-count',count);root.classList.toggle('dense',count>=16);root.setAttribute('aria-label',count+' 个频段的实时幅度，点击频段查看对应开凿机');
   bands.forEach((band,index)=>{
-    const button=document.createElement('button');button.type='button';button.className='band';button.dataset.band=index;button.setAttribute('aria-pressed',String(index===selected));
+    const button=document.createElement('button');button.type='button';button.className='band';button.dataset.band=index;button.dataset.tone=index/count<1/3?'low':index/count<2/3?'mid':'high';button.setAttribute('aria-pressed',String(index===selected));
     button.title='查看第 '+(index+1)+' 台 · '+Math.round(band.low)+'–'+Math.round(band.high)+' Hz';
     button.setAttribute('aria-label',button.title);
-    button.innerHTML='<div class="band-meter" role="meter" aria-label="频段 '+(index+1)+' 幅度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="band-fill"></div></div><div class="band-meta"><span class="band-frequency">'+frequencyLabel(band.low)+'</span><span class="band-code">'+String(index+1).padStart(2,'0')+'</span><span class="band-direction" aria-label="中位">·</span></div>';
-    button.addEventListener('click',()=>{if(!renderer)return;selected=index;renderer.focus(index);syncView();});root.append(button);bandButtons.push(button);
+    button.innerHTML='<div class="band-meter" role="meter" aria-label="频段 '+(index+1)+' 幅度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="band-fill"></div></div><div class="band-meta"><span class="band-frequency">'+frequencyLabel(band.low)+'</span><span class="band-direction" aria-label="中位">·</span></div>';
+    button.addEventListener('click',()=>{if(!renderer)return;selected=index;renderer.focus(index);syncView(true);});root.append(button);bandButtons.push(button);
   });
 }
-function syncView(){
+function syncCount(){
+  $('channel-count').value=count;$('channel-count-value').value=count+' 路';$('machine-count-value').textContent=count;
+  $('array-label').textContent='PERSPECTIVE CORRIDOR';
+  for(const value of [8,16,32,64])$('count-'+value).setAttribute('aria-pressed',String(count===value));
+  canvas.dataset.machines=count;canvas.setAttribute('aria-label',sceneDescription(count)+'方向键旋转，Shift 加方向键平移，Home 适配。');
+  document.title='让声谱，推动开凿。';
+}
+function changeCount(value){
+  const next=validateCount(value);if(next===count)return;
+  renderer?.setCount(next);count=next;selected=-1;bands=createBands(context?.sampleRate||48000,4096,count);
+  energy=new Float32Array(count);strokes=new Float32Array(count).fill(mapStroke(0));EMPTY=new Float32Array(count);
+  renderBands();syncCount();if(activeShortcut)applyShortcut(activeShortcut,false);else syncView();const url=new URL(location.href);url.searchParams.set('count',count);history.replaceState(null,'',url);
+}
+$('channel-count').addEventListener('input',event=>changeCount(Number(event.target.value)));
+for(const value of [8,16,32,64])$('count-'+value).addEventListener('click',()=>changeCount(value));
+function applyShortcut(id,updateUrl=true){
+  if(!renderer)return;const record=CAMERA_SHORTCUTS.find(view=>view.id===id);if(!record)return;
+  renderer.restoreCamera(shortcutCamera(record,count));activeShortcut=id;selected=-1;syncView();
+  if(updateUrl){const url=new URL(location.href);url.searchParams.set('preset',id);history.replaceState(null,'',url);}
+}
+function syncView(manual=false){
+  if(manual&&activeShortcut){activeShortcut=null;const url=new URL(location.href);url.searchParams.delete('preset');history.replaceState(null,'',url);}
   if(!renderer)return;$('zoom-label').value=Math.round(renderer.zoom*100)+'%';
+  for(const mode of ['side','top','free'])$('view-'+mode).setAttribute('aria-pressed',String(renderer.viewMode===mode));
+  canvas.dataset.view=renderer.viewMode;
+  canvas.dataset.shortcut=activeShortcut||'';shortcutButtons.forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.shortcut===activeShortcut)));
+  canvas.dataset.yaw=renderer.angles.yaw.toFixed(4);canvas.dataset.elevation=renderer.angles.elevation.toFixed(4);
+  $('view-free').title='方位 '+Math.round(renderer.angles.yaw*180/Math.PI)+'° · 俯角 '+Math.round(renderer.angles.elevation*180/Math.PI)+'°';
   bandButtons.forEach((button,index)=>button.setAttribute('aria-pressed',String(index===selected)));
 }
 function syncSettings(){
+  mapStroke=createStrokeMapper(settings);
   for(const key of Object.keys(defaults)){
-    $(key).value=settings[key];$(key+'-value').value=key==='gain'?settings[key].toFixed(1)+'×':settings[key]+'%';
+    $(key).value=settings[key];$(key+'-value').value=key==='gain'||key==='response'?settings[key].toFixed(2).replace(/0$/,'')+'×':settings[key]+'%';
   }
-  document.querySelector('.intro-data>div:nth-child(2) strong').innerHTML=settings.rest+'<span>%</span>';
+  $('mapping-summary').textContent=settings.lowPhase+'% → '+settings.highPhase+'%';
+  $('reset-mapping').textContent='恢复 '+DEFAULT_MAPPING.lowPhase+' → '+DEFAULT_MAPPING.highPhase+' ⤾';
+  $('mapping-storage').textContent=storageAvailable?'自动保存在此浏览器':'本次页面生效';
+  canvas.dataset.lowExtension=mapStroke(0).toFixed(5);canvas.dataset.highExtension=mapStroke(1).toFixed(5);
 }
-for(const key of Object.keys(defaults))$(key).addEventListener('input',event=>{settings[key]=Number(event.target.value);syncSettings();});
-$('reset-settings').addEventListener('click',()=>{Object.assign(settings,defaults);syncSettings();});
+function saveMapping(){try{localStorage.setItem(mappingKey,JSON.stringify(normalizeMapping(settings)));storageAvailable=true;}catch{storageAvailable=false;}}
+for(const key of Object.keys(defaults))$(key).addEventListener('input',event=>{settings[key]=Number(event.target.value);if(key in DEFAULT_MAPPING)saveMapping();syncSettings();});
+$('reset-mapping').addEventListener('click',()=>{Object.assign(settings,DEFAULT_MAPPING);saveMapping();syncSettings();});
+$('reset-settings').addEventListener('click',()=>{Object.assign(settings,defaults);saveMapping();syncSettings();});
+$('developer-tools').hidden=!SHOW_DEVELOPER;
+const developerTools=SHOW_DEVELOPER?mountViewDeveloper({
+  capture(){if(!renderer)throw Error('请等待模型加载完成。');return {layout:LAYOUT,count,selected:selected<0?null:selected,camera:renderer.captureCamera(),settings:{...settings}};},
+  restore(record){if(record.layout!==LAYOUT)throw Error('请选择此阵列版本的视角记录。');Object.assign(settings,record.settings);saveMapping();syncSettings();changeCount(record.count);renderer.restoreCamera(record.camera);selected=record.selected??-1;syncView(true);}
+}):null;
 $('start').addEventListener('click',startAudio);
 audio.addEventListener('play',()=>{try{ensureAudio().then(updateStatus).catch(()=>{});}catch(error){notice(error.message);}updateStatus();});
 audio.addEventListener('playing',updateStatus);
@@ -78,15 +126,35 @@ $('audio-file').addEventListener('change',event=>{
   $('track-title').textContent=file.name;$('track-artist').textContent='本地音频';$('start').querySelector('small').textContent=file.name;
   notice('');startAudio();event.target.value='';
 });
-$('zoom-in').addEventListener('click',()=>{renderer?.setZoom(renderer.zoom*1.3);syncView();});
-$('zoom-out').addEventListener('click',()=>{renderer?.setZoom(renderer.zoom/1.3);syncView();});
-$('reset-view').addEventListener('click',()=>{renderer?.reset();selected=-1;syncView();});
-$('detail-view').addEventListener('click',()=>{renderer?.detail();selected=-1;syncView();});
-canvas.addEventListener('pointerdown',event=>{if(!renderer)return;drag={x:event.clientX,y:event.clientY,id:event.pointerId};canvas.setPointerCapture(event.pointerId);});
-canvas.addEventListener('pointermove',event=>{if(!drag||drag.id!==event.pointerId)return;renderer.pan(event.clientX-drag.x,event.clientY-drag.y);drag.x=event.clientX;drag.y=event.clientY;});
-for(const event of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(event,()=>drag=null);
-canvas.addEventListener('wheel',event=>{if(!renderer)return;event.preventDefault();renderer.setZoom(renderer.zoom*Math.exp(-event.deltaY*.001));syncView();},{passive:false});
-$('fullscreen').addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $('visualizer').requestFullscreen();}catch{notice('此浏览器无法进入全屏，你仍可以缩放和平移阵列。');}});
+$('zoom-in').addEventListener('click',()=>{renderer?.setZoom(renderer.zoom*1.3);syncView(true);});
+$('zoom-out').addEventListener('click',()=>{renderer?.setZoom(renderer.zoom/1.3);syncView(true);});
+$('reset-view').addEventListener('click',()=>{renderer?.reset();selected=-1;syncView(true);});
+$('detail-view').addEventListener('click',()=>{renderer?.detail();selected=-1;syncView(true);});
+for(const mode of ['side','top','free'])$('view-'+mode).addEventListener('click',()=>{if(!renderer)return;renderer.setView(mode);if(mode!=='free'){selected=-1;const url=new URL(location.href);url.searchParams.set('view',mode);history.replaceState(null,'',url);}syncView(true);});
+$('pan-mode').addEventListener('click',()=>{panMode=!panMode;$('pan-mode').setAttribute('aria-pressed',String(panMode));canvas.dataset.tool=panMode?'pan':'orbit';});
+canvas.addEventListener('pointerdown',event=>{if(!renderer||event.button>2)return;event.preventDefault();canvas.focus({preventScroll:true});pointers.set(event.pointerId,{x:event.clientX,y:event.clientY,pan:event.button!==0||event.shiftKey||panMode});canvas.setPointerCapture(event.pointerId);});
+canvas.addEventListener('pointermove',event=>{
+  const previous=pointers.get(event.pointerId);if(!previous||!renderer)return;
+  const next={...previous,x:event.clientX,y:event.clientY},other=[...pointers.entries()].find(([id])=>id!==event.pointerId)?.[1];
+  if(other){
+    const before=Math.hypot(previous.x-other.x,previous.y-other.y),after=Math.hypot(next.x-other.x,next.y-other.y);
+    if(before>2&&after>2)renderer.setZoom(renderer.zoom*after/before);
+    renderer.pan((next.x-previous.x)/2,(next.y-previous.y)/2);
+  }else if(previous.pan||event.shiftKey)renderer.pan(next.x-previous.x,next.y-previous.y);
+  else renderer.orbit(next.x-previous.x,next.y-previous.y);
+  pointers.set(event.pointerId,next);syncView(true);
+});
+for(const event of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(event,event=>pointers.delete(event.pointerId));
+canvas.addEventListener('contextmenu',event=>event.preventDefault());
+canvas.addEventListener('dblclick',()=>{renderer?.reset();selected=-1;syncView(true);});
+canvas.addEventListener('keydown',event=>{
+  if(!renderer)return;const direction={ArrowLeft:[-12,0],ArrowRight:[12,0],ArrowUp:[0,-12],ArrowDown:[0,12]}[event.key];
+  if(direction){event.preventDefault();if(event.shiftKey||panMode)renderer.pan(...direction);else renderer.orbit(...direction);}
+  else if(['+','=','-','Home'].includes(event.key)){event.preventDefault();if(event.key==='Home'){renderer.reset();selected=-1;}else renderer.setZoom(renderer.zoom*(event.key==='-'?1/1.15:1.15));}else return;
+  syncView(true);
+});
+canvas.addEventListener('wheel',event=>{if(!renderer)return;event.preventDefault();renderer.setZoom(renderer.zoom*Math.exp(-event.deltaY*.001));syncView(true);},{passive:false});
+$('fullscreen').addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $('visualizer').requestFullscreen();}catch{notice('此浏览器无法进入全屏，你仍可以旋转、缩放和平移阵列。');}});
 document.addEventListener('fullscreenchange',()=>{$('fullscreen').textContent=document.fullscreenElement?'退出 ↙':'全屏 ↗';});
 canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();$('scene-error').hidden=false;$('scene-error').textContent='3D 绘图已中断，请刷新页面恢复。';});
 function frame(now){
@@ -95,26 +163,30 @@ function frame(now){
   let targets=EMPTY,rms=0;
   if(playing&&analyser){analyser.getFloatFrequencyData(bins);analyser.getFloatTimeDomainData(wave);for(const sample of wave)rms+=sample*sample;rms=Math.sqrt(rms/wave.length);targets=measureBands(bins,bands,{gain:settings.gain});}
   energy=smoothLevels(energy,targets,dt,settings.smooth/100);
-  const rest=1-restFromPhase(settings.rest/100),positions=new Float32Array(COUNT);
-  for(let i=0;i<COUNT;i++)positions[i]=strokeFromLoudness(targets[i],{rest,active:playing&&rms>.00003});
+  const rest=mapStroke(0),high=mapStroke(1),positions=new Float32Array(count);
+  for(let i=0;i<count;i++)positions[i]=mapStroke(targets[i],playing&&rms>.00003);
   strokes=smoothStrokes(strokes,positions,dt,settings.smooth/100);
+  for(let i=0;i<count;i++)strokes[i]=Math.max(Math.min(rest,high),Math.min(Math.max(rest,high),Math.abs(strokes[i]-positions[i])<.00001?positions[i]:strokes[i]));
   renderer?.draw(strokes,energy);
   if(now-lastMeters>85){
     lastMeters=now;let peak=0,peakIndex=0;
     $('level-reading').innerHTML=(playing&&rms>.00001?Math.round(20*Math.log10(rms)):'—')+'<small> dBFS</small>';
-    for(let i=0;i<COUNT;i++){
+    for(let i=0;i<count;i++){
       const button=bandButtons[i],value=Math.round(energy[i]*100),delta=strokes[i]-rest;
       button.style.setProperty('--level',energy[i].toFixed(4));button.querySelector('[role=meter]').setAttribute('aria-valuenow',value);
-      const arrow=button.querySelector('.band-direction');arrow.textContent=Math.abs(delta)<.002?'·':delta>0?'↙':'↗';arrow.setAttribute('aria-label',Math.abs(delta)<.002?'中位':delta>0?'铁傀儡伸出':'铁傀儡收回');arrow.title='铁傀儡行程 '+Math.round(strokes[i]*100)+'%';
+      const arrow=button.querySelector('.band-direction');arrow.textContent=Math.abs(delta)<.002?'·':delta>0?'↑':'↓';arrow.setAttribute('aria-label',Math.abs(delta)<.002?'低电平姿态':delta>0?(IS_LYING?'躯干上升':'躯干伸出'):(IS_LYING?'躯干下降':'躯干收回'));arrow.title='躯干伸出 '+Math.round(strokes[i]*100)+'%（100% 为全伸出）';
       if(energy[i]>peak){peak=energy[i];peakIndex=i;}
     }
     $('peak-reading').textContent=peak>.005?'主频段 '+frequencyLabel(bands[peakIndex].low)+'–'+frequencyLabel(bands[peakIndex].high)+' Hz':'峰值 —';
   }
   requestAnimationFrame(frame);
 }
-renderBands();syncSettings();requestAnimationFrame(frame);
+if(!IS_LYING){document.querySelector('h1').textContent='让声谱，推动开凿。';document.querySelector('.eyebrow').textContent='PERSPECTIVE CORRIDOR';const nav=document.querySelector('.site-header nav');nav.children[0].href='https://xjh-jorhai.github.io/piston-audio-reactor/experiments/lying-eight/';nav.children[0].textContent='横卧版 ↗';nav.children[1].href='https://xjh-jorhai.github.io/piston-audio-reactor/';nav.children[1].textContent='线性版 ↗';nav.children[2].href='https://github.com/XJH-Jorhai/piston-audio-reactor';document.querySelector('.intro-data>div:nth-child(2)>span').textContent='联动活塞';}
+$('camera-shortcuts').hidden=!CAMERA_SHORTCUTS.length;
+for(const record of CAMERA_SHORTCUTS){const button=document.createElement('button');button.type='button';button.textContent=record.name;button.dataset.shortcut=record.id;button.setAttribute('aria-pressed','false');button.disabled=true;button.addEventListener('click',()=>applyShortcut(record.id));$('shortcut-buttons').append(button);shortcutButtons.push(button);}
+renderBands();syncCount();syncSettings();requestAnimationFrame(frame);
 try{
-  renderer=createSceneRenderer(canvas,$('labels'),await loadTextures(),{forceCpu:new URLSearchParams(location.search).get('renderer')==='cpu'});canvas.dataset.machines=COUNT;canvas.dataset.renderer=renderer.backend;canvas.dataset.projection='perspective';syncView();updateStatus();startAudio();
+  renderer=createSceneRenderer(canvas,await loadTextures(),{count,forceCpu:new URLSearchParams(location.search).get('renderer')==='cpu'});canvas.dataset.renderer=renderer.backend;canvas.dataset.projection='perspective';canvas.dataset.orientation=IS_LYING?'lying':'standing';if(new URLSearchParams(location.search).get('view')==='top')renderer.setView('top');shortcutButtons.forEach(button=>button.disabled=false);applyShortcut(new URLSearchParams(location.search).get('preset'),false);syncView();developerTools?.setReady();updateStatus();startAudio();
 }catch(error){$('scene-error').hidden=false;$('scene-error').textContent='开凿机加载失败：'+error.message;$('status').textContent='可视化暂不可用';}
 window.addEventListener('pagehide',()=>{audio.pause();context?.suspend();});
 window.addEventListener('pageshow',event=>{if(event.persisted)updateStatus();});
