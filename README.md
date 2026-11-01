@@ -3,7 +3,7 @@
 保留原版开凿机的站立造型与 X 轴线性排列，在独立分支中同步横卧版的相机、音频映射与开发者工具。默认 16 路，支持 4–64 路逐路调节和 8/16/32/64 快捷按钮。
 
 - 演示：https://xjh-jorhai.github.io/piston-audio-reactor/
-- 分支：experiment/linear-modern；标签：v0.2.0-linear.2。
+- 分支：experiment/linear-modern；标签：v0.2.0-linear.3。
 - 横卧版：https://xjh-jorhai.github.io/piston-audio-reactor/experiments/lying-eight/
 - 旧线性版：https://xjh-jorhai.github.io/piston-audio-reactor/experiments/linear-legacy/
 - 长廊版：https://xjh-jorhai.github.io/piston-audio-reactor/experiments/perspective-corridor/
@@ -18,7 +18,7 @@
 
 默认音频 Assumptions / Sam Gellaitry，浏览器允许时尝试自动播放，否则点击启动或页面开始。支持本地音频导入、暂停、进度、音量、响应强度和动作平滑。FFT 4096，将 40 Hz–16 kHz 按路数分为对数频段；每路频谱 RMS 响度直接控制机械位置，没有周期载波。
 
-电平→行程面板可修改低电平姿态、高电平姿态与响应曲线，默认生成器进度 32→0；0 为躯干全伸出，50 为全收回。两端物理位移之间插值，响应曲线小于 1 时突出弱信号，大于 1 时突出强信号。静音停在低电平端点。设置自动保存在当前浏览器，线性版与横卧版分别保存。
+电平→行程面板可修改低电平姿态、高电平姿态与响应曲线，默认生成器进度 38→0；0 为躯干全伸出，50 为全收回。两端物理位移之间插值，响应曲线小于 1 时突出弱信号，大于 1 时突出强信号。静音停在低电平端点。设置自动保存在当前浏览器，线性版与横卧版分别保存。
 
 ## 开发者视角记录
 
@@ -41,3 +41,5 @@ Node.js 20+，无外部运行时依赖：
 原版纹理、MIT 参考项目和用户音源的来源见 [CREDITS.md](CREDITS.md)。
 
 标题统一为“让声谱，推动开凿。”，标题下的造型说明已移除。频谱柱宽与间距随路数和容器宽度自适应，4–64 路均完整排列，不使用横向滚动条。
+
+从旧版升级时，首次将低电平端点迁移为 38%，同时保留已有高电平端点与响应曲率；之后用户自行修改的映射仍照常保存。

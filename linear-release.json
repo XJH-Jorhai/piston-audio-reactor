@@ -1,7 +1,7 @@
 {
   "branch": "experiment/linear-modern",
-  "commit": "e08c482b40e7b18fa17ed59529d7300b19a7ac0a",
-  "tag": "v0.2.0-linear.2",
+  "commit": "2e01704d3d6b9f7236140bbd74c00221294f1388",
+  "tag": "v0.2.0-linear.3",
   "sourceBase": "v0.3.0-lying-eight.8",
   "legacyTag": "v0.1.0-linear"
 }

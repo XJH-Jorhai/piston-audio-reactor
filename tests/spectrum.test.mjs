@@ -67,9 +67,9 @@ test('the 38% reference samples the actual asymmetric generator curve',()=>{
   assert.equal(restFromPhase(),rest);
 });
 
-test('default loudness mapping starts at generator 32 and reaches full body extension at 0',()=>{
-  const low=1-restFromPhase(.32),high=1;
-  assert.deepEqual(DEFAULT_MAPPING,{lowPhase:32,highPhase:0,response:1});
+test('default loudness mapping starts at generator 38 and reaches full body extension at 0',()=>{
+  const low=1-restFromPhase(.38),high=1;
+  assert.deepEqual(DEFAULT_MAPPING,{lowPhase:38,highPhase:0,response:1});
   assert.equal(strokeFromLoudness(0),low);assert.equal(strokeFromLoudness(1),high);
   assert.equal(strokeFromLoudness(.5),(low+high)/2);
   assert.equal(strokeFromLoudness(1,{active:false}),low);

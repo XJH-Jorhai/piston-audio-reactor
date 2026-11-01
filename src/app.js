@@ -5,10 +5,19 @@ import {mountViewDeveloper} from './view-developer.js';
 import {LAYOUT,IS_LYING,SHOW_DEVELOPER,sceneDescription} from './layout.js';
 import {CAMERA_SHORTCUTS,shortcutCamera} from './camera-shortcuts.js';
 const $=id=>document.getElementById(id),audio=$('audio'),canvas=$('reactor');
-const defaults={gain:1.4,smooth:55,...DEFAULT_MAPPING},settings={...defaults},mappingKey='piston-'+LAYOUT+'-loudness-mapping-v1';
+const defaults={gain:1.4,smooth:55,...DEFAULT_MAPPING},settings={...defaults},mappingKey='piston-'+LAYOUT+'-loudness-mapping-'+(IS_LYING?'v1':'v2');
 let activeShortcut=null;const shortcutButtons=[];
 let storageAvailable=true;
-try{Object.assign(settings,normalizeMapping(JSON.parse(localStorage.getItem(mappingKey))));}catch{storageAvailable=false;}
+try{
+  const saved=localStorage.getItem(mappingKey);
+  if(saved!==null)Object.assign(settings,normalizeMapping(JSON.parse(saved)));
+  else if(!IS_LYING){
+    const previous=localStorage.getItem('piston-linear-loudness-mapping-v1');
+    if(previous!==null)Object.assign(settings,normalizeMapping(JSON.parse(previous)));
+    settings.lowPhase=DEFAULT_MAPPING.lowPhase;
+    localStorage.setItem(mappingKey,JSON.stringify(normalizeMapping(settings)));
+  }
+}catch{storageAvailable=false;}
 let mapStroke=createStrokeMapper(settings);
 let count=COUNT;try{const requested=new URLSearchParams(location.search).get('count');if(requested!==null)count=validateCount(Number(requested));}catch{}
 let renderer,context,analyser,source,wave,bands=createBands(48000,4096,count),bins,objectUrl,autoPending=true,panMode=false,previousTime=0,lastMeters=0;
@@ -89,6 +98,7 @@ function syncSettings(){
     $(key).value=settings[key];$(key+'-value').value=key==='gain'||key==='response'?settings[key].toFixed(2).replace(/0$/,'')+'×':settings[key]+'%';
   }
   $('mapping-summary').textContent=settings.lowPhase+'% → '+settings.highPhase+'%';
+  $('reset-mapping').textContent='恢复 '+DEFAULT_MAPPING.lowPhase+' → '+DEFAULT_MAPPING.highPhase+' ⤾';
   $('mapping-storage').textContent=storageAvailable?'自动保存在此浏览器':'本次页面生效';
   canvas.dataset.lowExtension=mapStroke(0).toFixed(5);canvas.dataset.highExtension=mapStroke(1).toFixed(5);
 }

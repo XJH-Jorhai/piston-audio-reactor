@@ -6,7 +6,7 @@
 - 原始线性演示：https://xjh-jorhai.github.io/piston-audio-reactor/experiments/linear-legacy/
 - 基线标签：v0.1.0-linear
 - 基线提交：f04b95726cf4b55d38580165197de485ff66e2c1
-- main 当前为用户要求同步升级的线性版（v0.2.0-linear.2），原始 v0.1.0-linear 通过标签与独立预览保留。透视长廊维持独立快照。
+- main 当前为用户要求同步升级的线性版（v0.2.0-linear.3），默认低电平进度 38 → 高电平进度 0；原始 v0.1.0-linear 通过标签与独立预览保留。透视长廊维持独立快照。
 
 ## 实验路线
 
