@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0-lying-eight.2 — experiment/lying-eight
+
+- Free orbit around the array or selected machine with 360-degree azimuth and −89° to 89° elevation.
+- Drag rotation, Shift/right-button drag panning, explicit pan tool, wheel zoom and two-finger pinch/pan.
+- Keyboard camera controls, visible free-camera state and one-click preset restoration.
+- Camera angles survive resizing; orbit preserves zoom, pan and audio playback.
+- Additional camera tests cover all sides, near-pole views, complete turns and invalid input.
+
 ## 0.3.0-lying-eight.1 — experiment/lying-eight
 
 - Separate worktree based on v0.2.0-corridor.1; previous routes remain available.
