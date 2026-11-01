@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0-lying-eight.3 — experiment/lying-eight
+
+- Adjustable 4–32 spectrum channels with 8/16 shortcuts and count URL parameter.
+- Live FFT repartition and array rebuild preserve camera angles and audio playback, fitting the complete new array.
+- Dynamic floor, labels, frequency meters and proportional low/mid/high colors.
+- Safe camera clipping for long arrays, including end-on free views; scrollable dense meters on narrow displays.
+
 ## 0.3.0-lying-eight.2 — experiment/lying-eight
 
 - Free orbit around the array or selected machine with 360-degree azimuth and −89° to 89° elevation.

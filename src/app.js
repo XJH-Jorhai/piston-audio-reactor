@@ -1,11 +1,13 @@
 import {createBands,measureBands,smoothLevels,smoothStrokes,restFromPhase,strokeFromLoudness} from './spectrum.js';
 import {COUNT,createSceneRenderer,loadTextures} from './scene.js';
+import {validateCount} from './machine.js';
 const $=id=>document.getElementById(id),audio=$('audio'),canvas=$('reactor');
 const defaults={gain:1.4,smooth:55,rest:38},settings={...defaults};
-let renderer,context,analyser,source,wave,bands=createBands(48000,4096,COUNT),bins,objectUrl,autoPending=true,panMode=false,previousTime=0,lastMeters=0;
+let count=COUNT;try{const requested=new URLSearchParams(location.search).get('count');if(requested!==null)count=validateCount(Number(requested));}catch{}
+let renderer,context,analyser,source,wave,bands=createBands(48000,4096,count),bins,objectUrl,autoPending=true,panMode=false,previousTime=0,lastMeters=0;
 const pointers=new Map();
-let energy=new Float32Array(COUNT),strokes=new Float32Array(COUNT).fill(1-restFromPhase(.38)),selected=-1;
-const EMPTY=new Float32Array(COUNT),bandButtons=[],frequencyLabel=hz=>hz>=1000?(hz/1000).toFixed(hz>=10000?0:1).replace(/\.0$/,'')+'k':Math.round(hz).toString();
+let energy=new Float32Array(count),strokes=new Float32Array(count).fill(1-restFromPhase(.38)),selected=-1,EMPTY=new Float32Array(count);
+const bandButtons=[],frequencyLabel=hz=>hz>=1000?(hz/1000).toFixed(hz>=10000?0:1).replace(/\.0$/,'')+'k':Math.round(hz).toString();
 function notice(text){$('message').textContent=text;$('message').hidden=!text;}
 function updateStatus(){
   const active=!audio.paused&&context?.state==='running';
@@ -19,7 +21,7 @@ function ensureAudio(){
     const Audio=window.AudioContext||window.webkitAudioContext;
     if(!Audio)throw Error('当前浏览器不支持 Web Audio 音频分析，请使用新版浏览器。');
     context=new Audio();analyser=context.createAnalyser();analyser.fftSize=4096;analyser.smoothingTimeConstant=.12;
-    bins=new Float32Array(analyser.frequencyBinCount);wave=new Float32Array(analyser.fftSize);bands=createBands(context.sampleRate,analyser.fftSize,COUNT);
+    bins=new Float32Array(analyser.frequencyBinCount);wave=new Float32Array(analyser.fftSize);bands=createBands(context.sampleRate,analyser.fftSize,count);
     source=context.createMediaElementSource(audio);source.connect(analyser);analyser.connect(context.destination);
     context.addEventListener('statechange',updateStatus);renderBands();
   }
@@ -35,14 +37,31 @@ async function startAudio(){
 }
 function renderBands(){
   const root=$('spectrum');root.replaceChildren();bandButtons.length=0;
+  root.style.setProperty('--band-count',count);root.classList.toggle('dense',count>=16);root.setAttribute('aria-label',count+' 个频段的实时幅度，点击频段查看对应开凿机');
   bands.forEach((band,index)=>{
-    const button=document.createElement('button');button.type='button';button.className='band';button.dataset.band=index;button.setAttribute('aria-pressed',String(index===selected));
+    const button=document.createElement('button');button.type='button';button.className='band';button.dataset.band=index;button.dataset.tone=index/count<1/3?'low':index/count<2/3?'mid':'high';button.setAttribute('aria-pressed',String(index===selected));
     button.title='查看第 '+(index+1)+' 台 · '+Math.round(band.low)+'–'+Math.round(band.high)+' Hz';
     button.setAttribute('aria-label',button.title);
     button.innerHTML='<div class="band-meter" role="meter" aria-label="频段 '+(index+1)+' 幅度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="band-fill"></div></div><div class="band-meta"><span class="band-frequency">'+frequencyLabel(band.low)+'</span><span class="band-code">'+String(index+1).padStart(2,'0')+'</span><span class="band-direction" aria-label="中位">·</span></div>';
     button.addEventListener('click',()=>{if(!renderer)return;selected=index;renderer.focus(index);syncView();});root.append(button);bandButtons.push(button);
   });
 }
+function syncCount(){
+  $('channel-count').value=count;$('channel-count-value').value=count+' 路';$('machine-count-value').textContent=count;
+  $('intro-description').textContent=count+' 台横卧，三列联动。中央升起，两侧落下。';
+  $('array-label').textContent='THREE LANES / 01—'+String(count).padStart(2,'0');
+  for(const value of [8,16])$('count-'+value).setAttribute('aria-pressed',String(count===value));
+  canvas.dataset.machines=count;canvas.setAttribute('aria-label',count+' 台横卧开凿机组成三条平行轨道；中央躯干升降，两侧手臂反向联动。方向键旋转，Shift 加方向键平移，Home 适配。');
+  document.title=count+' 路横卧试验 · 开凿声场';
+}
+function changeCount(value){
+  const next=validateCount(value);if(next===count)return;
+  renderer?.setCount(next);count=next;selected=-1;bands=createBands(context?.sampleRate||48000,4096,count);
+  energy=new Float32Array(count);strokes=new Float32Array(count).fill(1-restFromPhase(settings.rest/100));EMPTY=new Float32Array(count);
+  renderBands();syncCount();syncView();const url=new URL(location.href);url.searchParams.set('count',count);history.replaceState(null,'',url);
+}
+$('channel-count').addEventListener('input',event=>changeCount(Number(event.target.value)));
+for(const value of [8,16])$('count-'+value).addEventListener('click',()=>changeCount(value));
 function syncView(){
   if(!renderer)return;$('zoom-label').value=Math.round(renderer.zoom*100)+'%';
   for(const mode of ['side','top','free'])$('view-'+mode).setAttribute('aria-pressed',String(renderer.viewMode===mode));
@@ -119,14 +138,14 @@ function frame(now){
   let targets=EMPTY,rms=0;
   if(playing&&analyser){analyser.getFloatFrequencyData(bins);analyser.getFloatTimeDomainData(wave);for(const sample of wave)rms+=sample*sample;rms=Math.sqrt(rms/wave.length);targets=measureBands(bins,bands,{gain:settings.gain});}
   energy=smoothLevels(energy,targets,dt,settings.smooth/100);
-  const rest=1-restFromPhase(settings.rest/100),positions=new Float32Array(COUNT);
-  for(let i=0;i<COUNT;i++)positions[i]=strokeFromLoudness(targets[i],{rest,active:playing&&rms>.00003});
+  const rest=1-restFromPhase(settings.rest/100),positions=new Float32Array(count);
+  for(let i=0;i<count;i++)positions[i]=strokeFromLoudness(targets[i],{rest,active:playing&&rms>.00003});
   strokes=smoothStrokes(strokes,positions,dt,settings.smooth/100);
   renderer?.draw(strokes,energy);
   if(now-lastMeters>85){
     lastMeters=now;let peak=0,peakIndex=0;
     $('level-reading').innerHTML=(playing&&rms>.00001?Math.round(20*Math.log10(rms)):'—')+'<small> dBFS</small>';
-    for(let i=0;i<COUNT;i++){
+    for(let i=0;i<count;i++){
       const button=bandButtons[i],value=Math.round(energy[i]*100),delta=strokes[i]-rest;
       button.style.setProperty('--level',energy[i].toFixed(4));button.querySelector('[role=meter]').setAttribute('aria-valuenow',value);
       const arrow=button.querySelector('.band-direction');arrow.textContent=Math.abs(delta)<.002?'·':delta>0?'↑':'↓';arrow.setAttribute('aria-label',Math.abs(delta)<.002?'中位':delta>0?'躯干上升':'躯干下降');arrow.title='躯干升降行程 '+Math.round(strokes[i]*100)+'%';
@@ -136,9 +155,9 @@ function frame(now){
   }
   requestAnimationFrame(frame);
 }
-renderBands();syncSettings();requestAnimationFrame(frame);
+renderBands();syncCount();syncSettings();requestAnimationFrame(frame);
 try{
-  renderer=createSceneRenderer(canvas,$('labels'),await loadTextures(),{forceCpu:new URLSearchParams(location.search).get('renderer')==='cpu'});canvas.dataset.machines=COUNT;canvas.dataset.renderer=renderer.backend;canvas.dataset.projection='orthographic';canvas.dataset.orientation='lying';if(new URLSearchParams(location.search).get('view')==='top')renderer.setView('top');syncView();updateStatus();startAudio();
+  renderer=createSceneRenderer(canvas,$('labels'),await loadTextures(),{count,forceCpu:new URLSearchParams(location.search).get('renderer')==='cpu'});canvas.dataset.renderer=renderer.backend;canvas.dataset.projection='orthographic';canvas.dataset.orientation='lying';if(new URLSearchParams(location.search).get('view')==='top')renderer.setView('top');syncView();updateStatus();startAudio();
 }catch(error){$('scene-error').hidden=false;$('scene-error').textContent='开凿机加载失败：'+error.message;$('status').textContent='可视化暂不可用';}
 window.addEventListener('pagehide',()=>{audio.pause();context?.suspend();});
 window.addEventListener('pageshow',event=>{if(event.persisted)updateStatus();});

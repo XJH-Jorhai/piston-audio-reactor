@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {COUNT,PITCH,layPoint,machineParts,machineCorners,framingCorners} from '../src/machine.js';
+import {COUNT,PITCH,layPoint,machineParts,machineCorners,framingCorners,validateCount,arrayCenter} from '../src/machine.js';
 const almost=(a,b)=>assert.ok(Math.abs(a-b)<1e-12,a+' differs from '+b);
 const find=(q,id,offset=0)=>machineParts(q,offset).find(part=>part.id===id);
 const fixed=parts=>parts.filter(part=>part.id.endsWith('-base')||part.id==='pumpkin');
@@ -89,4 +89,16 @@ test('framing endpoints bound all eight machines throughout their travel',()=>{
     for(const point of machineCorners(step/20,index))point.forEach((value,axis)=>assert.ok(value>=mins[axis]-1e-12&&value<=maxs[axis]+1e-12));
   }
   assert.throws(()=>machineCorners(.5,8),RangeError);assert.throws(()=>machineParts(NaN),TypeError);
+});
+
+test('variable channel counts bound exactly the requested stations without changing pitch',()=>{
+  for(let count=4;count<=32;count++){
+    assert.equal(validateCount(count),count);
+    const corners=framingCorners(count),zs=corners.map(p=>p[2]),last=machineCorners(.5,count-1,count);
+    assert.equal(Math.min(...zs),-3);almost(Math.max(...zs),(count-1)*PITCH);
+    assert.ok(last.every(p=>p[2]>=(count-1)*PITCH-3));
+    assert.deepEqual(arrayCenter(count),[.5,.5,((count-1)*PITCH-3)/2]);
+    assert.throws(()=>machineCorners(.5,count,count),RangeError);
+  }
+  for(const value of [0,3,33,8.5,NaN,Infinity,'16'])assert.throws(()=>framingCorners(value),RangeError);
 });

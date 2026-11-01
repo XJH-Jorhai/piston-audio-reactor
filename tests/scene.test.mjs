@@ -5,6 +5,13 @@ import {restFromPhase,strokeFromLoudness,createBands} from '../src/spectrum.js';
 test('eight logarithmic bands drive eight stations over the entire audible range',()=>{
   const bands=createBands(48000,4096,COUNT);assert.equal(COUNT,8);assert.equal(bands.length,8);assert.equal(bands[0].low,40);assert.ok(Math.abs(bands.at(-1).high-16000)<1e-8);
 });
+
+test('adjustable counts repartition the same frequency range into matching machine bands',()=>{
+  for(const count of [4,8,16,32]){
+    const bands=createBands(48000,4096,count);assert.equal(bands.length,count);assert.equal(bands[0].low,40);assert.ok(Math.abs(bands.at(-1).high-16000)<1e-8);
+    for(let i=1;i<count;i++){assert.ok(bands[i].low>bands[i-1].low);assert.ok(Math.abs(bands[i].low-bands[i-1].high)<1e-8);}
+  }
+});
 test('high loudness raises the central body and lowers both arm lanes',()=>{
   const sideRest=restFromPhase(.38),rest=1-sideRest;
   const get=(level,id)=>machineParts(strokeFromLoudness(level,{rest})).find(p=>p.id===id).y;
