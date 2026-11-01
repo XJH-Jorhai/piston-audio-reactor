@@ -3,7 +3,7 @@
 保留原版开凿机的站立造型与 X 轴线性排列，在独立分支中同步横卧版的相机、音频映射与开发者工具。默认 16 路，支持 4–64 路逐路调节和 8/16/32/64 快捷按钮。
 
 - 演示：https://xjh-jorhai.github.io/piston-audio-reactor/
-- 分支：experiment/linear-modern；标签：v0.2.0-linear.1。
+- 分支：experiment/linear-modern；标签：v0.2.0-linear.2。
 - 横卧版：https://xjh-jorhai.github.io/piston-audio-reactor/experiments/lying-eight/
 - 旧线性版：https://xjh-jorhai.github.io/piston-audio-reactor/experiments/linear-legacy/
 - 长廊版：https://xjh-jorhai.github.io/piston-audio-reactor/experiments/perspective-corridor/
@@ -24,7 +24,7 @@
 
 页面底部保留“开发者 · 视角记录”。输入名称并记录当前构图，可保存多个、载入恢复、分别或批量导出 JSON，也可导入 JSON。记录完整角度、缩放、平移、目标点、旋转枢轴、画幅、路数、选择和响应参数。相同画幅精确恢复，其他画幅等比缩放。
 
-视角文件采用 `piston-audio-reactor.camera-views` v1，使用 `layout: linear` 区分站立阵列；每个版本分别保存记录。最多 200 条，导入前完整校验。横卧版用户提供的六个快捷视角只用于横卧造型，线性版可记录自己的构图。
+视角文件采用 `piston-audio-reactor.camera-views` v1，使用 `layout: linear` 区分站立阵列；每个版本分别保存记录。最多 200 条，导入前完整校验。线性版使用用户新提供的两个快捷视角“默认视角”和“开凿者”；只恢复相机，不修改当前路数或响应参数。可用 ?preset=saved-1 或 saved-2 直接打开，仍保留开发者面板记录自己的构图。
 
 ## 运行与验证
 
@@ -39,3 +39,5 @@ Node.js 20+，无外部运行时依赖：
 测试覆盖站立刚体几何、固定底座与完全收回、反向伸缩、4–64 路分配、自由相机裁剪和取景、端点映射/曲率、视角文件往返与画幅适配。旧版通过标签和独立预览保留。
 
 原版纹理、MIT 参考项目和用户音源的来源见 [CREDITS.md](CREDITS.md)。
+
+标题统一为“让声谱，推动开凿。”，标题下的造型说明已移除。频谱柱宽与间距随路数和容器宽度自适应，4–64 路均完整排列，不使用横向滚动条。
