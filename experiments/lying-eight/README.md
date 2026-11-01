@@ -2,7 +2,7 @@
 
 从透视长廊版本 v0.2.0-corridor.1 分出的独立展示路线。将原版开凿机整体旋转 90° 横卧，沿长轴排列成三条平行升降轨道；保留一格真实活塞行程。路数可在 4–64 之间逐路调节，默认 8 路，提供 8/16/32/64 路快捷切换。
 
-- 分支：experiment/lying-eight；版本：v0.3.0-lying-eight.9。
+- 分支：experiment/lying-eight；版本：v0.3.0-lying-eight.10。
 - 预览：https://xjh-jorhai.github.io/piston-audio-reactor/experiments/lying-eight/
 - 16 路直达：https://xjh-jorhai.github.io/piston-audio-reactor/experiments/lying-eight/?count=16
 - 32 路直达：https://xjh-jorhai.github.io/piston-audio-reactor/experiments/lying-eight/?count=32
@@ -67,3 +67,9 @@ Node.js 20+，无外部运行时依赖：
 几何继承独立定版 Piston Letter Studio v1.2.0，渲染基础继承本仓库的透视长廊分支。参考 Andy Wang 的 MIT 项目 reactor-audio-visualizer。Minecraft 原版纹理及音源来源详见 [CREDITS.md](CREDITS.md)。旧路线保持独立，不用本分支覆盖。
 
 两版页面标题统一为“让声谱，推动开凿。”，标题下的造型说明已移除。
+
+## 三版连续切换
+
+顶部“线性版 / 横卧版 / 长廊版”在当前标签页内切换。共用同一个 audio 元素、AudioContext、音源节点及分析器，保留进度、暂停、音量、播放速率及本地导入音源；不会重新开始音乐。浏览器前进/后退同样连续播放。每个版本的构图和响应参数在本次页面会话中保留，路数随切换带入。
+
+完整的跨版本本地预览从 main 工作目录运行 npm run dev，三个入口及其 src/bootstrap.js、src/audio-session.js 必须一同部署。各实验分支仍保留独立几何、相机和发布快照；直接进入任一正式入口都可开始同页切换。

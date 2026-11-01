@@ -1,6 +1,6 @@
 # 让声谱，推动开凿。 · 透视长廊版
 
-v0.3.0-corridor.1，独立分支 experiment/perspective-corridor。默认保留原始近大远小的长廊构图；旧版本 v0.2.0-corridor.1 标签可用于对比和回退。
+v0.3.0-corridor.2，独立分支 experiment/perspective-corridor。默认保留原始近大远小的长廊构图；旧版本 v0.2.0-corridor.1 标签可用于对比和回退。
 
 - [长廊 Demo](https://xjh-jorhai.github.io/piston-audio-reactor/experiments/perspective-corridor/)
 - [线性版](https://xjh-jorhai.github.io/piston-audio-reactor/) · [横卧版](https://xjh-jorhai.github.io/piston-audio-reactor/experiments/lying-eight/)
@@ -30,3 +30,11 @@ npm run build
 ## 来源
 
 开凿机源自独立定版的 Piston Letter Studio v1.2.0；参考 Andy Wang 的 MIT 项目 reactor-audio-visualizer，保留作者与许可。Minecraft 纹理和音源归属详见 [CREDITS.md](CREDITS.md)。
+
+## 三版连续切换
+
+顶部“线性版 / 横卧版 / 长廊版”在当前标签页内切换。共用同一个 audio 元素、AudioContext、音源节点及分析器，保留进度、暂停、音量、播放速率及本地导入音源；不会重新开始音乐。浏览器前进/后退同样连续播放。每个版本的构图和响应参数在本次页面会话中保留，路数随切换带入。
+
+完整的跨版本本地预览从 main 工作目录运行 npm run dev，三个入口及其 src/bootstrap.js、src/audio-session.js 必须一同部署。各实验分支仍保留独立几何、相机和发布快照；直接进入任一正式入口都可开始同页切换。
+
+记录视角新增“播放器视角”（?preset=player-view），来自用户 piston-camera-view.json；保留原始透视角度、距离、平移和缩放，只切换相机，不更改当前路数或映射。
