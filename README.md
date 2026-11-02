@@ -17,6 +17,8 @@
 
 **独立实验：[开凿 · 音乐播放器](https://xjh-jorhai.github.io/piston-audio-reactor/experiments/music-player/)**。以长廊播放器视角为主视觉，加入悬浮封面、模糊背景、自定义播放控制和 LRC 歌词；源码位于 [`feature/music-player`](https://github.com/XJH-Jorhai/piston-audio-reactor/tree/feature/music-player) 分支。它在单独目录预览，原有定格版本保持不变。
 
+播放器为纯静态 Demo：“演示曲目”播放随站点提供的固定 MP3；“本地导入”只在浏览器处理访客的歌曲、封面与歌词，不上传或保存到后端。不接入在线音乐账号。当前固定曲目为 Assumptions。
+
 ## 功能与操作
 
 - **4–64 路频谱**：可连续调节，也可快捷选择 8 / 16 / 32 / 64 路。频谱覆盖 40 Hz–16 kHz，随路数重新分配对数频段。

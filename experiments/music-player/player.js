@@ -4,6 +4,7 @@ import {RECORDED_VIEWS} from './engine/recorded-views.js';
 import {createAudioSession} from './session.js';
 import {readAudioMetadata,filenameInfo,formatTime} from './media.js';
 import {parseLyrics,activeLyricIndex} from './lyrics.js';
+import {DEMO_TRACKS} from './tracks.js';
 
 const $=id=>document.getElementById(id),audio=$('audio'),canvas=$('reactor');
 const session=createAudioSession(audio),baseCamera=RECORDED_VIEWS[0].camera;
@@ -16,7 +17,7 @@ try{
 const persist=()=>{try{localStorage.setItem('piston-player-settings-v1',JSON.stringify(settings));}catch{}};
 let renderer,graph,bins,wave,bands=createBands(48000,4096,settings.count),energy,strokes,empty,mapStroke=createStrokeMapper(settings);
 let previousTime=0,lastMeter=0,cameraEdited=false,toastTimer,coverObjectUrl,trackToken=0,lyricModel={synced:false,lines:[]},activeLine=-2;
-let info={title:'Assumptions',artist:'Sam Gellaitry',album:'IV'};
+let info={title:DEMO_TRACKS[0].title,artist:DEMO_TRACKS[0].artist,album:DEMO_TRACKS[0].album},activeDemoId=DEMO_TRACKS[0].id;
 const pointers=new Map(),lyricButtons=[];
 audio.volume=settings.volume;
 function toast(message){clearTimeout(toastTimer);$('toast').textContent=message;$('toast').hidden=!message;if(message)toastTimer=setTimeout(()=>{$('toast').hidden=true;},4800);}
@@ -128,12 +129,39 @@ $('open-settings').addEventListener('click',()=>$('settings-dialog').showModal()
 $('settings-dialog').addEventListener('click',event=>{if(event.target===$('settings-dialog')){const b=event.target.getBoundingClientRect();if(event.clientX<b.left||event.clientX>b.right||event.clientY<b.top||event.clientY>b.bottom)event.target.close();}});
 $('edit-title').addEventListener('input',event=>setInfo({title:event.target.value||'未命名音轨'}));$('edit-artist').addEventListener('input',event=>setInfo({artist:event.target.value||'本地音频'}));
 $('import-audio').addEventListener('click',()=>$('audio-file').click());$('import-cover').addEventListener('click',()=>$('cover-file').click());
+const demoButtons=[];
+function syncLibrary(){
+  for(const [track,button] of demoButtons){
+    if(track.id===activeDemoId)button.setAttribute('aria-current','true');else button.removeAttribute('aria-current');
+  }
+  $('local-track-status').hidden=activeDemoId!==null;
+  $('local-track-status').textContent=activeDemoId===null?'当前播放：本地导入的歌曲（仅本次页面有效）':'';
+}
+for(const [index,track] of DEMO_TRACKS.entries()){
+  const button=document.createElement('button');button.type='button';button.className='demo-track';
+  const cover=document.createElement('img');cover.src=track.cover;cover.alt='';cover.width=44;cover.height=44;
+  const details=document.createElement('span'),title=document.createElement('strong'),artist=document.createElement('span');
+  title.textContent=track.title;artist.textContent=track.artist;details.append(title,artist);button.append(cover,details);
+  button.addEventListener('click',()=>{
+    if(activeDemoId!==track.id){
+      ++trackToken;activeDemoId=track.id;setInfo({title:track.title,artist:track.artist,album:track.album});
+      setCover(track.cover);setLyrics(track.lyrics||'');$('track-number').textContent=String(index+1).padStart(2,'0');
+      session.replaceTrack(track.audio);syncLibrary();
+    }
+    $('library-dialog').close();start();
+  });
+  $('demo-tracks').append(button);demoButtons.push([track,button]);
+}
+syncLibrary();
+$('open-library').addEventListener('click',()=>$('library-dialog').showModal());
+$('close-library').addEventListener('click',()=>$('library-dialog').close());
+$('library-import').addEventListener('click',()=>{$('library-dialog').close();$('audio-file').click();});
 for(const id of ['import-lyrics','settings-lyrics'])$(id).addEventListener('click',()=>$('lyrics-file').click());
 $('clear-lyrics').addEventListener('click',()=>setLyrics(''));
 $('audio-file').addEventListener('change',async event=>{
   const file=event.target.files[0];event.target.value='';if(!file)return;
   if(!file.type.startsWith('audio/')&&!/\.(mp3|wav|m4a|ogg|flac|aac)$/i.test(file.name)){toast('请选择音频文件。');return;}
-  const token=++trackToken;setInfo({...filenameInfo(file.name),album:''});setLyrics('');setCover(new URL('./assets/artwork/local-cover.svg',import.meta.url).href);
+  const token=++trackToken;activeDemoId=null;syncLibrary();$('track-number').textContent='LOCAL';setInfo({...filenameInfo(file.name),album:''});setLyrics('');setCover(new URL('./assets/artwork/local-cover.svg',import.meta.url).href);
   session.replaceFile(file);start();
   try{
     const metadata=await readAudioMetadata(file);if(token!==trackToken)return;
@@ -150,14 +178,15 @@ $('cover-file').addEventListener('change',event=>{
 });
 $('lyrics-file').addEventListener('change',async event=>{
   const file=event.target.files[0];event.target.value='';if(!file)return;
+  const token=trackToken;
   try{
     if(file.size>500000)throw Error('歌词文件需小于 500 KB。');
     const bytes=new Uint8Array(await file.arrayBuffer());let value;
     if(bytes[0]===255&&bytes[1]===254)value=new TextDecoder('utf-16le').decode(bytes);
     else if(bytes[0]===254&&bytes[1]===255)value=new TextDecoder('utf-16be').decode(bytes);
     else{try{value=new TextDecoder('utf-8',{fatal:true}).decode(bytes);}catch{value=new TextDecoder('gb18030').decode(bytes);}}
-    setLyrics(value);toast(lyricModel.synced?'已载入同步歌词':'已载入文本歌词');
-  }catch(error){toast(error.message||'无法读取歌词文件。');}
+    if(token!==trackToken)return;setLyrics(value);toast(lyricModel.synced?'已载入同步歌词':'已载入文本歌词');
+  }catch(error){if(token===trackToken)toast(error.message||'无法读取歌词文件。');}
 });
 for(const event of ['play','playing','pause','ended','waiting','canplay'])audio.addEventListener(event,syncPlayback);
 for(const event of ['timeupdate','loadedmetadata','durationchange','seeked','emptied'])audio.addEventListener(event,syncTimeline);
@@ -165,7 +194,7 @@ audio.addEventListener('volumechange',syncVolume);
 audio.addEventListener('error',()=>{toast('无法播放这个音频，请尝试其他文件。');syncPlayback();});
 $('cover-art').addEventListener('error',()=>{const fallback=new URL('./assets/artwork/local-cover.svg',import.meta.url).href;if($('cover-art').src!==fallback)setCover(fallback);});
 document.addEventListener('keydown',event=>{
-  if($('settings-dialog').open||event.target.closest('input,textarea,button,a,[contenteditable]')||event.altKey||event.ctrlKey||event.metaKey)return;
+  if($('settings-dialog').open||$('library-dialog').open||event.target.closest('input,textarea,button,a,[contenteditable]')||event.altKey||event.ctrlKey||event.metaKey)return;
   if(event.code==='Space'){event.preventDefault();togglePlayback();}
   else if(event.key==='ArrowLeft'){event.preventDefault();seekTo(audio.currentTime-5);}
   else if(event.key==='ArrowRight'){event.preventDefault();seekTo(audio.currentTime+5);}
@@ -203,4 +232,4 @@ try{
   new ResizeObserver(()=>{if(!cameraEdited)applyPlayerCamera();}).observe(canvas);
 }catch(error){$('scene-status').textContent='画面暂不可用';toast('可视化加载失败，仍可使用音乐播放功能。');}
 if(new URLSearchParams(location.search).get('autoplay')!=='0')start();
-window.addEventListener('pagehide',()=>{audio.pause();graph?.context.suspend();});
+window.addEventListener('pagehide',event=>{audio.pause();graph?.context.suspend();if(!event.persisted){session.dispose();if(coverObjectUrl)URL.revokeObjectURL(coverObjectUrl);}});
