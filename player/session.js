@@ -1,6 +1,10 @@
 /** The media element and Web Audio graph outlive every visualizer mount. */
 export function createAudioSession(audio,{AudioContextClass=globalThis.AudioContext||globalThis.webkitAudioContext,urls=globalThis.URL}={}){
   let graph,objectUrl;
+  function replaceSource(source,nextObjectUrl){
+    audio.pause();const previous=objectUrl;
+    objectUrl=nextObjectUrl;audio.src=source;audio.load();if(previous)urls.revokeObjectURL(previous);
+  }
   return {
     audio,
     get hasGraph(){return !!graph;},
@@ -15,8 +19,9 @@ export function createAudioSession(audio,{AudioContextClass=globalThis.AudioCont
       return graph;
     },
     replaceFile(file){
-      audio.pause();const next=urls.createObjectURL(file),previous=objectUrl;
-      objectUrl=next;audio.src=next;audio.load();if(previous)urls.revokeObjectURL(previous);
-    }
+      const next=urls.createObjectURL(file);replaceSource(next,next);
+    },
+    replaceTrack(source){replaceSource(source,null);},
+    dispose(){audio.pause();if(objectUrl){urls.revokeObjectURL(objectUrl);objectUrl=null;}}
   };
 }

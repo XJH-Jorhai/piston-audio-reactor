@@ -7,7 +7,7 @@
   <meta name="description" content="让声谱，推动开凿。以 Minecraft 开凿机长廊为主视觉的音乐播放器。">
   <title>Assumptions — Sam Gellaitry · 开凿播放器</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2310151b'/%3E%3Cpath d='M9 23V9h6v14m4-10v10h5V13' fill='none' stroke='%23e2b687' stroke-width='2'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="./player.css?v=player-1">
+  <link rel="stylesheet" href="./player.css?v=player-2">
 </head>
 <body>
   <div class="album-backdrop" aria-hidden="true"></div><div class="backdrop-shade" aria-hidden="true"></div><div class="film-grain" aria-hidden="true"></div>
@@ -18,6 +18,7 @@
     <symbol id="i-muted" viewBox="0 0 24 24"><path d="m11 4-6 5H2v6h3l6 5Zm5 5 6 6m0-6-6 6"/></symbol>
     <symbol id="i-repeat" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4M3 11V8a2 2 0 0 1 2-2h16M7 22l-4-4 4-4m14-3v5a2 2 0 0 1-2 2H3"/></symbol>
     <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5h16v-5"/></symbol>
+    <symbol id="i-library" viewBox="0 0 24 24"><path d="M4 5h16M4 10h16M4 15h8m4-1 5 3-5 3Z"/></symbol>
     <symbol id="i-tune" viewBox="0 0 24 24"><path d="M4 7h16M4 17h16M8 4v6m8 4v6"/></symbol>
     <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
     <symbol id="i-back" viewBox="0 0 24 24"><path d="m7 8-4-4m0 0v6m0-6h6M4 14a8 8 0 1 0 3-8"/></symbol>
@@ -30,7 +31,8 @@
       <a class="wordmark" href="./" aria-label="开凿播放器首页"><span class="brand-symbol" aria-hidden="true"><i></i><i></i><i></i></span><span>开凿<span class="wordmark-sub">LISTENING ROOM</span></span></a>
       <span class="edition">MUSIC IN MOTION <span>VOL. 01</span></span>
       <nav class="header-actions" aria-label="播放器操作">
-        <button id="import-audio" class="text-button" type="button"><svg><use href="#i-upload"/></svg><span>导入音乐</span></button>
+        <button id="open-library" class="text-button" type="button" aria-label="演示曲目"><svg><use href="#i-library"/></svg><span>演示曲目</span></button>
+        <button id="import-audio" class="text-button" type="button" aria-label="本地导入" title="仅在浏览器播放，不上传"><svg><use href="#i-upload"/></svg><span>本地导入</span></button>
         <button id="open-settings" class="icon-button" type="button" aria-label="播放设置" title="播放设置"><svg><use href="#i-tune"/></svg></button>
       </nav>
     </header>
@@ -63,12 +65,13 @@
   <audio id="audio" preload="metadata" src="./assets/audio/sam-gellaitry-assumptions.mp3"></audio>
   <input id="audio-file" type="file" accept="audio/*,.mp3,.wav,.m4a,.ogg,.flac" hidden><input id="cover-file" type="file" accept="image/jpeg,image/png,image/webp,image/avif" hidden><input id="lyrics-file" type="file" accept=".lrc,.txt,text/plain" hidden>
   <div id="toast" class="toast" role="status" hidden></div>
+  <dialog id="library-dialog" aria-labelledby="library-title"><div class="settings-top"><div><p class="overline">DEMO COLLECTION</p><h2 id="library-title">演示曲目</h2></div><button id="close-library" class="icon-button" type="button" aria-label="关闭曲目列表"><svg><use href="#i-close"/></svg></button></div><div class="settings-body"><div id="demo-tracks" class="demo-tracks"></div><p id="local-track-status" class="field-note" hidden></p><div class="settings-actions"><button id="library-import" type="button">导入本地歌曲</button></div><p class="field-note">本地歌曲、封面和歌词仅在浏览器处理，不上传；刷新后需要重新导入。</p></div></dialog>
   <dialog id="settings-dialog" aria-labelledby="settings-title"><div class="settings-top"><div><p class="overline">MAKE IT YOURS</p><h2 id="settings-title">播放设置</h2></div><button id="close-settings" class="icon-button" type="button" aria-label="关闭设置"><svg><use href="#i-close"/></svg></button></div>
     <div class="settings-body">
       <section class="settings-group"><h3>歌曲与封面</h3><label class="field-label">歌曲标题<input id="edit-title" type="text" maxlength="180" value="Assumptions"></label><label class="field-label">艺术家<input id="edit-artist" type="text" maxlength="180" value="Sam Gellaitry"></label><div class="settings-actions"><button id="import-cover" type="button">更换封面</button><button id="settings-lyrics" type="button">导入歌词</button><button id="clear-lyrics" type="button">清除歌词</button></div><p class="field-note">支持音频内嵌封面，以及带时间标记的 LRC 歌词。</p></section>
       <section class="settings-group"><h3>声谱与机械行程</h3><label class="slider-label" for="band-count">频谱路数<output id="band-count-value">64</output></label><input id="band-count" type="range" min="4" max="64" step="1" value="64"><label class="slider-label" for="gain">响应强度<output id="gain-value">1.4×</output></label><input id="gain" type="range" min=".3" max="3" step=".1" value="1.4"><label class="slider-label" for="smooth">动作平滑<output id="smooth-value">55%</output></label><input id="smooth" type="range" min="0" max="95" step="1" value="55"><label class="slider-label" for="low-phase">静音姿态<output id="low-phase-value">38%</output></label><input id="low-phase" type="range" min="0" max="50" step="1" value="38"><label class="slider-label" for="high-phase">高电平姿态<output id="high-phase-value">0%</output></label><input id="high-phase" type="range" min="0" max="50" step="1" value="0"><label class="slider-label" for="response">响应曲线<output id="response-value">1.0×</output></label><input id="response" type="range" min=".25" max="4" step=".05" value="1"><p class="field-note">0% 为躯干全伸出，50% 为全收回。声音直接驱动行程。</p><button id="reset-mapping" class="reset-parameters" type="button">恢复默认声场</button></section>
     </div>
   </dialog>
-  <script type="module" src="./player.js?v=player-1"></script>
+  <script type="module" src="./player.js?v=player-2"></script>
 </body>
 </html>
