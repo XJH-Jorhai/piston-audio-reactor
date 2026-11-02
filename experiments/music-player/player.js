@@ -3,8 +3,8 @@ import {createBands,measureBands,smoothLevels,smoothStrokes,createStrokeMapper,n
 import {RECORDED_VIEWS} from './engine/recorded-views.js';
 import {createAudioSession} from './session.js';
 import {readAudioMetadata,filenameInfo,formatTime} from './media.js';
-import {parseLyrics,activeLyricIndex} from './lyrics.js';
-import {DEMO_TRACKS} from './tracks.js';
+import {parseLyrics,activeLyricIndex,createLyricsLoader} from './lyrics.js?v=player-3';
+import {DEMO_TRACKS} from './tracks.js?v=player-3';
 
 const $=id=>document.getElementById(id),audio=$('audio'),canvas=$('reactor');
 const session=createAudioSession(audio),baseCamera=RECORDED_VIEWS[0].camera;
@@ -18,6 +18,8 @@ const persist=()=>{try{localStorage.setItem('piston-player-settings-v1',JSON.str
 let renderer,graph,bins,wave,bands=createBands(48000,4096,settings.count),energy,strokes,empty,mapStroke=createStrokeMapper(settings);
 let previousTime=0,lastMeter=0,cameraEdited=false,toastTimer,coverObjectUrl,trackToken=0,lyricModel={synced:false,lines:[]},activeLine=-2;
 let info={title:DEMO_TRACKS[0].title,artist:DEMO_TRACKS[0].artist,album:DEMO_TRACKS[0].album},activeDemoId=DEMO_TRACKS[0].id;
+let lyricImportRevision=0;
+const lyricsLoader=createLyricsLoader({apply:setLyrics,onError:()=>toast('同步歌词暂时无法载入，可手动导入 LRC。')});
 const pointers=new Map(),lyricButtons=[];
 audio.volume=settings.volume;
 function toast(message){clearTimeout(toastTimer);$('toast').textContent=message;$('toast').hidden=!message;if(message)toastTimer=setTimeout(()=>{$('toast').hidden=true;},4800);}
@@ -75,6 +77,7 @@ function syncTimeline(){
   if(duration&&navigator.mediaSession?.setPositionState){try{navigator.mediaSession.setPositionState({duration,playbackRate:audio.playbackRate,position:Math.min(duration,audio.currentTime)});}catch{}}
 }
 function setLyrics(source){
+  lyricsLoader.cancel();lyricImportRevision++;
   lyricModel=parseLyrics(source);activeLine=-2;lyricButtons.length=0;
   const root=$('lyrics-lines');root.replaceChildren();
   $('lyrics-empty').hidden=!!lyricModel.lines.length;root.hidden=!lyricModel.lines.length;
@@ -147,6 +150,7 @@ for(const [index,track] of DEMO_TRACKS.entries()){
       ++trackToken;activeDemoId=track.id;setInfo({title:track.title,artist:track.artist,album:track.album});
       setCover(track.cover);setLyrics(track.lyrics||'');$('track-number').textContent=String(index+1).padStart(2,'0');
       session.replaceTrack(track.audio);syncLibrary();
+      lyricsLoader.load(track.lyricsUrl);
     }
     $('library-dialog').close();start();
   });
@@ -179,14 +183,15 @@ $('cover-file').addEventListener('change',event=>{
 $('lyrics-file').addEventListener('change',async event=>{
   const file=event.target.files[0];event.target.value='';if(!file)return;
   const token=trackToken;
+  const revision=++lyricImportRevision;lyricsLoader.cancel();
   try{
     if(file.size>500000)throw Error('歌词文件需小于 500 KB。');
     const bytes=new Uint8Array(await file.arrayBuffer());let value;
     if(bytes[0]===255&&bytes[1]===254)value=new TextDecoder('utf-16le').decode(bytes);
     else if(bytes[0]===254&&bytes[1]===255)value=new TextDecoder('utf-16be').decode(bytes);
     else{try{value=new TextDecoder('utf-8',{fatal:true}).decode(bytes);}catch{value=new TextDecoder('gb18030').decode(bytes);}}
-    if(token!==trackToken)return;setLyrics(value);toast(lyricModel.synced?'已载入同步歌词':'已载入文本歌词');
-  }catch(error){if(token===trackToken)toast(error.message||'无法读取歌词文件。');}
+    if(token!==trackToken||revision!==lyricImportRevision)return;setLyrics(value);toast(lyricModel.synced?'已载入同步歌词':'已载入文本歌词');
+  }catch(error){if(token===trackToken&&revision===lyricImportRevision)toast(error.message||'无法读取歌词文件。');}
 });
 for(const event of ['play','playing','pause','ended','waiting','canplay'])audio.addEventListener(event,syncPlayback);
 for(const event of ['timeupdate','loadedmetadata','durationchange','seeked','emptied'])audio.addEventListener(event,syncTimeline);
@@ -226,10 +231,11 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 syncSettings();rebuildBands();syncVolume();syncTimeline();setInfo(info);requestAnimationFrame(frame);
+lyricsLoader.load(DEMO_TRACKS[0].lyricsUrl);
 try{
   renderer=createSceneRenderer(canvas,await loadTextures(),{count:settings.count,forceCpu:new URLSearchParams(location.search).get('renderer')==='cpu'});
   canvas.dataset.renderer=renderer.backend;applyPlayerCamera();syncPlayback();
   new ResizeObserver(()=>{if(!cameraEdited)applyPlayerCamera();}).observe(canvas);
 }catch(error){$('scene-status').textContent='画面暂不可用';toast('可视化加载失败，仍可使用音乐播放功能。');}
 if(new URLSearchParams(location.search).get('autoplay')!=='0')start();
-window.addEventListener('pagehide',event=>{audio.pause();graph?.context.suspend();if(!event.persisted){session.dispose();if(coverObjectUrl)URL.revokeObjectURL(coverObjectUrl);}});
+window.addEventListener('pagehide',event=>{audio.pause();graph?.context.suspend();if(!event.persisted){lyricsLoader.cancel();session.dispose();if(coverObjectUrl)URL.revokeObjectURL(coverObjectUrl);}});

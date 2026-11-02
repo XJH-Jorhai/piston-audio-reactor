@@ -1,7 +1,7 @@
 {
   "branch": "feature/music-player",
-  "commit": "e781a58aa7adcfb1fc1467f0a9c830c2e85ebec7",
+  "commit": "0480d0fdfecd2a62e316f06432a75012bd546011",
   "baseTag": "v1.0.0",
-  "version": "0.1.0-player.2",
+  "version": "0.1.0-player.3",
   "url": "https://xjh-jorhai.github.io/piston-audio-reactor/experiments/music-player/"
 }

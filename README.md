@@ -17,7 +17,7 @@
 
 **独立实验：[开凿 · 音乐播放器](https://xjh-jorhai.github.io/piston-audio-reactor/experiments/music-player/)**。以长廊播放器视角为主视觉，加入悬浮封面、模糊背景、自定义播放控制和 LRC 歌词；源码位于 [`feature/music-player`](https://github.com/XJH-Jorhai/piston-audio-reactor/tree/feature/music-player) 分支。它在单独目录预览，原有定格版本保持不变。
 
-播放器为纯静态 Demo：“演示曲目”播放随站点提供的固定 MP3；“本地导入”只在浏览器处理访客的歌曲、封面与歌词，不上传或保存到后端。不接入在线音乐账号。当前固定曲目为 Assumptions。
+播放器为纯静态 Demo：“演示曲目”提供六首用户指定的 MP3 与配套同步 LRC：Assumptions、おしえてかみさま、双生コンフリクト、月 feat. ヰ世界情緒、琵琶曲、朋友的酒。“本地导入”只在浏览器处理访客的歌曲、封面与歌词，不上传或保存到后端，不接入在线音乐账号。播放器设计依据和素材来源见 [来源说明](experiments/music-player/CREDITS.md)。
 
 ## 功能与操作
 
