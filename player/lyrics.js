@@ -16,3 +16,20 @@ export function activeLyricIndex(lines,time){
   while(low<high){const middle=(low+high)>>1;if(lines[middle].time<=time)low=middle+1;else high=middle;}
   return low-1;
 }
+
+/** A canceled or superseded request must never replace the current song's lyrics. */
+export function createLyricsLoader({apply,onError=()=>{},fetcher=globalThis.fetch}){
+  let revision=0,controller;
+  function cancel(){revision++;controller?.abort();controller=null;}
+  return {cancel,async load(url){
+    cancel();if(!url)return;
+    const current=revision;controller=new AbortController();
+    try{
+      const response=await fetcher(url,{signal:controller.signal});
+      if(!response.ok)throw Error('歌词载入失败');
+      const source=await response.text();
+      if(current===revision){parseLyrics(source);apply(source);}
+    }catch(error){if(current===revision&&error.name!=='AbortError')onError();}
+    finally{if(current===revision)controller=null;}
+  }};
+}

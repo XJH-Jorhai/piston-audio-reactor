@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {createAudioSession} from '../../player/session.js';
 import {DEMO_TRACKS} from '../../player/tracks.js';
+import {parseID3} from '../../player/media.js';
+import {parseLyrics} from '../../player/lyrics.js';
 
 test('switching local files and demo sources releases old Blob URLs without rebuilding the audio graph',()=>{
   const revoked=[],files=[],events=[];
@@ -41,5 +43,12 @@ test('all published demo tracks have unique ids and existing assets within the b
     for(const source of [track.audio,track.cover]){
       assert.ok(source.startsWith(assets.href));assert.ok((await fs.stat(new URL(source))).size>0);
     }
+    const metadata=parseID3(await fs.readFile(new URL(track.audio)));
+    assert.equal(track.title,metadata.title);assert.equal(track.album,metadata.album);
+    assert.equal(track.artist.replace(/\s*\/\s*/g,'/'),metadata.artist.replace(/\s*\/\s*/g,'/'));
+    assert.deepEqual(await fs.readFile(new URL(track.cover)),Buffer.from(metadata.picture.data));
+    assert.ok(track.lyricsUrl.startsWith(assets.href));
+    const lyrics=parseLyrics(await fs.readFile(new URL(track.lyricsUrl),'utf8'));
+    assert.equal(lyrics.synced,true);assert.ok(lyrics.lines.length>0);
   }
 });

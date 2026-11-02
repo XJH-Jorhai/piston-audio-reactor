@@ -1,6 +1,6 @@
 {
   "name": "piston-listening-room",
-  "version": "0.1.0-player.2",
+  "version": "0.1.0-player.3",
   "private": true,
   "type": "module",
   "description": "Independent music player with a reactive Minecraft piston corridor, floating cover art and local synced lyrics.",
