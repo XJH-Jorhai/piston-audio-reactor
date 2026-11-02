@@ -1,57 +1,42 @@
 # 展示路线与回退
 
-## 当前状态
+## 当前主线
 
-2026-11-02 将用户确认的在线功能固定为整站 `v1.0.0`。标签对应提交 `71df7b29394f1299d1678d2c4ea224f6dc525cf3`；之后的 README 和分支整理提交只更新文档，不改变该定格快照。
+`main` 现维护音乐播放器；`feature/music-player` 已合入主线。后续从 `main` 建立短期分支，不再从独立 worktree 复制播放器预览。
 
-云端长期分支仅保留 `main`。三个已完成实验分支的最新源码由标签保留，线上三个页面依然共存。本地实验 worktree 和本地分支保留，不删除文件或历史。
+首页进入 `player/`，`?style=corridor|linear|lying` 只切换画面，共用歌曲、播放状态、歌词和频谱参数。渲染器包含在播放器内，不依赖归档目录。
 
-## 历史来源
+## 固定版本
 
-| 路线 | 原实验分支（已收拢） | 固定标签 | 完整源码提交 | main 中的页面 |
-| --- | --- | --- | --- | --- |
-| 线性升级版 | experiment/linear-modern | v0.2.0-linear.5 | 6a01016383799b60baedbe0e937453f216d711d4 | 根目录 |
-| 横卧阵列 | experiment/lying-eight | v0.3.0-lying-eight.11 | ec9bcf0150c651996d3b2037f1a131a0088e58ee | experiments/lying-eight/ |
-| 透视长廊 | experiment/perspective-corridor | v0.3.0-corridor.3 | 29a83aea6c5c471f796048e007db358f8464044e | experiments/perspective-corridor/ |
-| 原始线性版 | 原始基线 | v0.1.0-linear | f04b95726cf4b55d38580165197de485ff66e2c1 | experiments/linear-legacy/ |
+| 标签 | 内容 | 在线目录 |
+| --- | --- | --- |
+| v1.2.0 | 播放器主线，三种可选样式 | `player/` |
+| v1.1.0 | 六曲长廊播放器，加入其他样式前定格 | `experiments/music-player/` |
+| v0.1.0-player.3 | 原播放器实验分支的完整六曲源码 | Git 标签归档 |
+| v1.0.0 | 原三版可视化工具 | `visualizer/` |
+| v0.2.0-linear.5 | 线性升级版实验源码 | Git 标签归档 |
+| v0.3.0-lying-eight.11 | 横卧实验源码 | Git 标签归档 |
+| v0.3.0-corridor.3 | 长廊实验源码 | Git 标签归档 |
+| v0.1.0-linear | 原始线性基线 | `experiments/linear-legacy/` |
 
-`linear-release.json` 和两个预览目录内的 `preview.json` 是发布时的来源记录，其中的分支字段代表历史来源，不代表云端仍保留该分支。原始长廊 `v0.2.0-corridor.1` 及其余历史标签也继续保留。
+固定标签不移动。原 `v1.0.0` 提交为 `71df7b29394f1299d1678d2c4ea224f6dc525cf3`；六曲播放器源码为 `0480d0fdfecd2a62e316f06432a75012bd546011`。发布记录位于 `releases/`。
 
-## 恢复固定版本
+`visualizer/` 保留原工具的完整运行时，内部线性 / 横卧 / 长廊仍可同页切换，共用音频。旧顶层横卧、长廊入口转到该归档。历史 `src/` 与实验源文件保留作来源与回归检查，不是当前播放器入口。
+
+## 恢复
 
 ```sh
 git fetch origin --tags
-# 在新目录查看完整定格版，不改动当前 main：
-git worktree add --detach ../piston-audio-reactor-v1.0.0 v1.0.0
+git worktree add --detach ../piston-frozen v1.1.0
+# 六曲长廊页面：../piston-frozen/experiments/music-player/
 ```
 
-查看某一路线的原始源码，可将最后一个参数换成对应标签。例如 `v0.3.0-corridor.3` 是长廊源码分支的完整快照；`v1.0.0` 则包含可一起部署的三个入口。
+原工具用 `v1.0.0` 恢复，原播放器实验源码用 `v0.1.0-player.3` 恢复。固定版本通过 HTTP 静态服务访问。
 
-历史标签不移动、不覆盖。GitHub Release 自动提供固定标签的源码归档。
+## 开发约定
 
-## 后续开发
-
-当前在研路线：`feature/music-player`，基于 `v1.0.0`，独立工作目录 `../piston-audio-player`。独立页面源码为 `player/`，预览地址为 `experiments/music-player/`。用户要求的长廊“播放器视角”、封面模糊背景、清晰悬浮封面和歌词/播放控制均在此路线开发；不会覆盖已定格三个入口。当前预览版本为 `v0.1.0-player.1`。
-
-发布播放器时，先在该分支测试、提交、打对应 `player/release.json` 版本标签并推送，再从 main 执行 `node scripts/publish-player.mjs --source ../piston-audio-player`。脚本仅更新播放器独立目录，检查来源提交与标签；预览目录的 `preview.json` 记录来源。
-
-以当前 `main` 或固定标签为起点建立新的短期分支，不重新保留三套长期云端实验分支：
-
-```sh
-git fetch origin
-git worktree add -b feature/player ../piston-player origin/main
-# 若要严格从定格功能起步，将 origin/main 换成 v1.0.0。
-```
-
-主工作树中的线性根目录、横卧目录和长廊目录已包含全部运行时。改动共享播放器、切换入口或公共控件时，三个版本一并检查。合并功能后删除已完成的短期分支；需要保留的阶段结果使用标签记录。
-
-原有 `scripts/sync-linear.mjs` 与 `scripts/publish-preview.mjs` 保留为历史工作流工具，会校验对应实验源分支是否已提交并推送。云端实验分支收拢后，不直接沿用旧推送命令；若专门恢复该工作流，需先显式恢复并推送对应源分支。普通后续开发以 main 内已有目录为准。
-
-## 三版行为
-
-- 三个入口使用同页切换，保留同一个 audio 元素、AudioContext、音源节点和分析器；音频位置、暂停与本地音源不重置。
-- 每次卸载停止旧视图的动画循环与 ResizeObserver，并用 AbortController 清理事件。
-- 路数支持 4–64，切换版本带入当前路数；各版本映射分别保存在浏览器。
-- 线性版两个用户视角、横卧版六个用户视角、长廊“播放器视角”均为相机快捷方式，不改变路数和响应参数。
-- 线性、长廊保留开发者视角 JSON；横卧版隐藏开发者面板。载入完整开发者记录会恢复该记录的路数和响应设置。
-- 原始线性版归档单独保留，不接入新的连续切换会话。
+- 维护 `player/`，验证后将短期分支合回 `main`。
+- 不修改 `experiments/music-player/`、`visualizer/` 的定格运行时。
+- 保留本地实验 worktree、历史分支和标签；已合并的云端短期分支可清理。
+- `scripts/publish-player.mjs` 已停用，防止误覆盖六曲定格目录；其他旧预览脚本仅保留历史用途。
+- 素材和外部代码 / 设计参考同步记录在 `player/CREDITS.md`。

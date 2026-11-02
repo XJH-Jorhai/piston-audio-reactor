@@ -1,12 +1,13 @@
 {
-  "name": "piston-audio-reactor",
-  "version": "0.2.0-linear.5",
+  "name": "piston-listening-room",
+  "version": "1.2.0",
   "private": true,
   "type": "module",
-  "description": "Adjustable 4–64 lying Minecraft piston machines with editable loudness-to-stroke mapping.",
+  "description": "Static music player with corridor, linear and lying Minecraft spectrum scenes, six demo tracks and synced lyrics.",
   "scripts": {
     "dev": "node scripts/serve.mjs",
-    "test": "node --test tests/*.test.mjs",
-    "build": "node scripts/build.mjs"
+    "test": "node --test tests/*.test.mjs tests/player/*.test.mjs",
+    "build": "node scripts/build.mjs",
+    "test:player": "node --test tests/player/*.test.mjs"
   }
 }

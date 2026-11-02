@@ -1,0 +1,27 @@
+/** Bundled demo assets only. Visitor-selected files never enter this catalog. */
+export const DEMO_TRACKS=Object.freeze([
+  Object.freeze({id:'assumptions',title:'Assumptions',artist:'Sam Gellaitry',album:'IV',
+    audio:new URL('./assets/audio/sam-gellaitry-assumptions.mp3',import.meta.url).href,
+    cover:new URL('./assets/artwork/assumptions.jpg',import.meta.url).href,
+    lyricsUrl:new URL('./assets/lyrics/sam-gellaitry-assumptions.lrc',import.meta.url).href}),
+  Object.freeze({id:'oshiete-kamisama',title:'おしえてかみさま',artist:'理芽',album:'NEW ROMANCER2',
+    audio:new URL('./assets/audio/rime-oshiete-kamisama.mp3',import.meta.url).href,
+    cover:new URL('./assets/artwork/rime-oshiete-kamisama.jpg',import.meta.url).href,
+    lyricsUrl:new URL('./assets/lyrics/rime-oshiete-kamisama.lrc',import.meta.url).href}),
+  Object.freeze({id:'sousei-conflict',title:'双生コンフリクト',artist:'LOLUET / ヰ世界情緒',album:'双生コンフリクト',
+    audio:new URL('./assets/audio/loluet-isekaijoucho-sousei-conflict.mp3',import.meta.url).href,
+    cover:new URL('./assets/artwork/loluet-isekaijoucho-sousei-conflict.jpg',import.meta.url).href,
+    lyricsUrl:new URL('./assets/lyrics/loluet-isekaijoucho-sousei-conflict.lrc',import.meta.url).href}),
+  Object.freeze({id:'tsuki',title:'月 feat. ヰ世界情緒',artist:'Guiano / ヰ世界情緒',album:'花鳥風月',
+    audio:new URL('./assets/audio/guiano-isekaijoucho-tsuki.mp3',import.meta.url).href,
+    cover:new URL('./assets/artwork/guiano-isekaijoucho-tsuki.jpg',import.meta.url).href,
+    lyricsUrl:new URL('./assets/lyrics/guiano-isekaijoucho-tsuki.lrc',import.meta.url).href}),
+  Object.freeze({id:'pipa-dj',title:'琵琶曲',artist:'秋秋',album:'琵琶曲',
+    audio:new URL('./assets/audio/qiuqiu-pipa-dj.mp3',import.meta.url).href,
+    cover:new URL('./assets/artwork/qiuqiu-pipa-dj.jpg',import.meta.url).href,
+    lyricsUrl:new URL('./assets/lyrics/qiuqiu-pipa-dj.lrc',import.meta.url).href}),
+  Object.freeze({id:'pengyou-de-jiu',title:'朋友的酒',artist:'李晓杰 / 玉萨',album:'有情有义',
+    audio:new URL('./assets/audio/lixiaojie-yusa-pengyou-de-jiu.mp3',import.meta.url).href,
+    cover:new URL('./assets/artwork/lixiaojie-yusa-pengyou-de-jiu.jpg',import.meta.url).href,
+    lyricsUrl:new URL('./assets/lyrics/lixiaojie-yusa-pengyou-de-jiu.lrc',import.meta.url).href})
+]);
